@@ -800,6 +800,35 @@ function renderCapture(){
   document.getElementById('fData').readOnly=false;
 }
 
+function preprocessarImagem(file){
+  return new Promise((resolve)=>{
+    const img = new Image();
+    img.onload = ()=>{
+      // amplia a imagem (melhora OCR em fotos de celular com resolução alta mas texto pequeno)
+      const escala = img.width < 1200 ? 2 : 1.4;
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width * escala;
+      canvas.height = img.height * escala;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+      // escala de cinza + aumento de contraste (threshold suave) — ajuda bastante em texto
+      // escrito à mão com caneta/marcador sobre etiqueta amarela
+      const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const d = imgData.data;
+      for(let i=0; i<d.length; i+=4){
+        const cinza = 0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2];
+        // realce de contraste simples (curva em S)
+        const realce = cinza < 140 ? cinza * 0.6 : 255 - (255-cinza) * 0.6;
+        d[i] = d[i+1] = d[i+2] = realce;
+      }
+      ctx.putImageData(imgData, 0, 0);
+      canvas.toBlob(blob => resolve(blob), 'image/png');
+    };
+    img.src = URL.createObjectURL(file);
+  });
+}
+
 function handlePhoto(ev){
   const file = ev.target.files[0];
   if(!file) return;
@@ -807,24 +836,29 @@ function handlePhoto(ev){
   document.getElementById('photoBox').innerHTML = `<img src="${url}">`;
   const strip = document.getElementById('ocrStrip');
   strip.classList.remove('hidden');
-  document.getElementById('ocrStatus').textContent = 'Lendo etiqueta…';
+  document.getElementById('ocrStatus').textContent = 'Preparando imagem…';
 
   if(window.Tesseract){
-    Tesseract.recognize(file, 'por')
-      .then(({data:{text}})=>{
-        const found = parseOcrText(text);
-        if(found.cert || found.data){
-          document.getElementById('ocrStatus').textContent = 'Leitura concluída';
-          abrirConfirmacao(found);
-        } else {
-          document.getElementById('ocrStatus').textContent = 'Não consegui identificar os dados na etiqueta — preencha manualmente.';
-          document.getElementById('manualFields').classList.remove('hidden');
-        }
+    preprocessarImagem(file).then(imagemProcessada=>{
+      document.getElementById('ocrStatus').textContent = 'Lendo etiqueta…';
+      Tesseract.recognize(imagemProcessada, 'por', {
+        tessedit_pageseg_mode: '6' // trata como um bloco único de texto (melhor p/ etiqueta)
       })
-      .catch(()=>{
-        document.getElementById('ocrStatus').textContent = 'Não consegui ler automaticamente — preencha manualmente.';
-        document.getElementById('manualFields').classList.remove('hidden');
-      });
+        .then(({data:{text}})=>{
+          const found = parseOcrText(text);
+          if(found.cert || found.data){
+            document.getElementById('ocrStatus').textContent = 'Leitura concluída';
+            abrirConfirmacao(found);
+          } else {
+            document.getElementById('ocrStatus').textContent = 'Não consegui identificar os dados na etiqueta — preencha manualmente.';
+            document.getElementById('manualFields').classList.remove('hidden');
+          }
+        })
+        .catch(()=>{
+          document.getElementById('ocrStatus').textContent = 'Não consegui ler automaticamente — preencha manualmente.';
+          document.getElementById('manualFields').classList.remove('hidden');
+        });
+    });
   } else {
     setTimeout(()=>{
       document.getElementById('ocrStatus').textContent = 'OCR indisponível offline — preencha manualmente.';
@@ -838,22 +872,37 @@ function parseOcrText(text){
   const ensaio = isEnsaio(state.equipAtual);
   const prefixo = CODIGO_PREFIXO[state.equipAtual];
 
+  // normaliza confusões comuns de OCR em texto manuscrito: O↔0, I/l↔1, S↔5, B↔8
+  const textoNormalizado = text
+    .replace(/[Oo](?=\d)/g, '0').replace(/(?<=\d)[Oo]/g, '0')
+    .replace(/[Il](?=\d)/g, '1').replace(/(?<=\d)[Il]/g, '1');
+
   if(ensaio){
     // luva/tapete: procura o número do CA (geralmente perto de "CA" ou "Código" na etiqueta)
-    const m = text.match(/(?:C\.?A\.?|C[oó]digo)\D{0,6}(\d{4,6})/i) || text.match(/\b\d{5}\b/);
+    const m = textoNormalizado.match(/(?:C\.?A\.?|C[oó]digo)\D{0,6}(\d{4,6})/i) || textoNormalizado.match(/\b\d{4,5}\b/);
     if(m) found.cert = m[1] || m[0];
   } else if(prefixo){
-    // procura o prefixo fixo do equipamento seguido de dígitos (ex: TIXR2050)
-    const re = new RegExp(prefixo + '\\s*\\d{3,5}', 'i');
-    const m = text.match(re);
-    if(m) found.cert = m[0].replace(/\s+/g,'').toUpperCase();
+    // o prefixo (PIXR/TIXR/EIXR) já é conhecido — só precisa achar o NÚMERO solto que vem
+    // depois dele na etiqueta. Não depende de o OCR reconhecer as letras do prefixo.
+    // Tenta primeiro achar "prefixo + número" (mais confiável quando dá certo)...
+    const reComPrefixo = new RegExp(prefixo + '\\s*[\\-\\.]?\\s*(\\d{3,5})', 'i');
+    let m = textoNormalizado.match(reComPrefixo) || text.match(reComPrefixo);
+    if(m){
+      found.cert = prefixo + m[1];
+    } else {
+      // ...senão, pega o primeiro número de 3 a 5 dígitos que não faça parte de uma data
+      // (datas têm "/" colado; um número de código fica sozinho, sem barra do lado)
+      const semDatas = textoNormalizado.replace(/\d{2}[\/\.\-]\d{2}[\/\.\-]\d{2,4}/g, '');
+      const mNum = semDatas.match(/\b\d{3,5}\b/);
+      if(mNum) found.cert = prefixo + mNum[0];
+    }
   } else {
     // sem prefixo conhecido — pega um código alfanumérico genérico
-    const m = text.match(/\b[A-Z]{2,10}\d{2,6}[A-Z0-9]*\b/i);
+    const m = textoNormalizado.match(/\b[A-Z]{2,10}\d{2,6}[A-Z0-9]*\b/i);
     if(m) found.cert = m[0].toUpperCase();
   }
-  // data: aceita ano com 2 ou 4 dígitos (ex: 04/08/26 ou 04/08/2026)
-  const dateMatch = text.match(/\b(\d{2})[\/\.\-](\d{2})[\/\.\-](\d{2,4})\b/);
+  // data: só precisa da primeira (Calibrado em) — a validade agora é sempre automática
+  const dateMatch = textoNormalizado.match(/\b(\d{2})[\/\.\-](\d{2})[\/\.\-](\d{2,4})\b/);
   if(dateMatch){
     let [, d, mo, y] = dateMatch;
     if(y.length===2) y = '20'+y;
