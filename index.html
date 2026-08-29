@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Calibração São Francisco — Colaborador &amp; Gestor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<style>
+:root{
+  --asphalt:#14181B;
+  --panel:#1D2226;
+  --panel-2:#242A2F;
+  --line: rgba(255,255,255,0.08);
+  --yellow:#FFC629;
+  --yellow-dim:#7A6520;
+  --ink:#F5F1E8;
+  --muted:#8B939B;
+  --danger:#E5484D;
+  --danger-bg:rgba(229,72,77,0.12);
+  --warn:#FF8A3D;
+  --warn-bg:rgba(255,138,61,0.12);
+  --ok:#3DD68C;
+  --ok-bg:rgba(61,214,140,0.12);
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--asphalt);color:var(--ink);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;}
+h1,h2,h3,.display{font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:0.02em;}
+.mono{font-family:'JetBrains Mono',monospace;}
+.app{max-width:480px;margin:0 auto;min-height:100vh;background:var(--asphalt);position:relative;padding-bottom:84px;}
+.hidden{display:none !important;}
+
+/* road-line divider signature */
+.roadline{height:10px;background:repeating-linear-gradient(90deg,var(--yellow) 0 22px, transparent 22px 40px);opacity:0.85;margin:0;}
+
+.filebar{display:flex;align-items:center;justify-content:space-between;padding:6px 16px;background:#0E1114;color:var(--muted);font-size:11px;font-family:'JetBrains Mono',monospace;border-bottom:1px solid var(--line);}
+.filebar b{color:var(--yellow);}
+
+.topbar{display:flex;align-items:center;gap:12px;padding:18px 20px 14px;}
+.logo{width:44px;height:44px;flex-shrink:0;}
+.brand h1{font-size:16px;margin:0;line-height:1.1;color:var(--ink);}
+.brand span{display:block;font-size:10.5px;color:var(--muted);letter-spacing:0.14em;font-family:'Inter';text-transform:uppercase;margin-top:2px;}
+
+.screen{padding:8px 20px 20px;}
+.eyebrow{font-size:11px;letter-spacing:0.16em;color:var(--yellow);text-transform:uppercase;font-family:'Oswald';margin:0 0 6px;}
+h2.title{font-size:24px;margin:0 0 18px;}
+
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:12px;}
+.card.tap{cursor:pointer;transition:border-color .15s, transform .1s;}
+.card.tap:active{transform:scale(0.98);}
+.card.tap:hover{border-color:var(--yellow-dim);}
+
+.role-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:24px;}
+.role-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:22px 14px;text-align:center;cursor:pointer;}
+.role-card:active{transform:scale(0.97);}
+.role-card .ic{font-size:28px;margin-bottom:10px;}
+.role-card b{display:block;font-family:'Oswald';text-transform:uppercase;font-size:14px;letter-spacing:0.04em;}
+.role-card span{color:var(--muted);font-size:11.5px;}
+.role-card.colab{border-color:rgba(255,198,41,0.35);}
+.role-card.gestor{border-color:rgba(61,214,140,0.35);}
+
+label{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin:14px 0 6px;}
+input,select{width:100%;background:var(--panel-2);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:12px 14px;font-size:15px;font-family:'Inter';}
+input:focus,select:focus{outline:none;border-color:var(--yellow);}
+.btn{display:block;width:100%;text-align:center;border:none;border-radius:8px;padding:14px;font-family:'Oswald';font-size:14px;text-transform:uppercase;letter-spacing:0.04em;cursor:pointer;margin-top:18px;}
+.btn-primary{background:var(--yellow);color:#20180a;}
+.btn-primary:active{background:#e0ae1f;}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--line);}
+.btn-danger{background:var(--danger-bg);color:var(--danger);border:1px solid rgba(229,72,77,0.4);}
+.btn-ok{background:var(--ok-bg);color:var(--ok);border:1px solid rgba(61,214,140,0.4);}
+.link-back{color:var(--muted);font-size:12.5px;display:inline-flex;align-items:center;gap:6px;cursor:pointer;margin-bottom:14px;}
+
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-family:'JetBrains Mono';padding:3px 8px;border-radius:20px;text-transform:uppercase;letter-spacing:0.03em;}
+.badge.ok{background:var(--ok-bg);color:var(--ok);}
+.badge.warn{background:var(--warn-bg);color:var(--warn);}
+.badge.danger{background:var(--danger-bg);color:var(--danger);}
+.badge.pend{background:rgba(255,198,41,0.12);color:var(--yellow);}
+.badge.locked{background:rgba(139,147,155,0.12);color:var(--muted);}
+.badge.sem-dado{background:rgba(139,147,155,0.1);color:var(--muted);border:1px dashed var(--line);}
+
+.locked-banner{display:flex;gap:10px;align-items:flex-start;background:rgba(255,198,41,0.07);border:1px dashed var(--yellow-dim);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--muted);margin-bottom:14px;}
+.locked-banner b{color:var(--yellow);}
+
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.prefix-card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 10px;text-align:center;cursor:pointer;}
+.prefix-card b{display:block;font-family:'Oswald';font-size:15px;}
+.prefix-card .base{color:var(--muted);font-size:10.5px;margin-top:2px;}
+.prefix-card .cnt{margin-top:8px;}
+.prefix-card:active{transform:scale(0.97);}
+
+.equip-row{display:flex;align-items:center;justify-content:space-between;padding:13px 4px;border-bottom:1px solid var(--line);cursor:pointer;}
+.equip-row:last-child{border-bottom:none;}
+.equip-row .name{font-size:14px;font-weight:500;}
+.equip-row .meta{font-size:11px;color:var(--muted);margin-top:2px;}
+.equip-row .chev{color:var(--muted);}
+
+.bottom-nav{position:fixed;left:0;right:0;bottom:0;max-width:480px;margin:0 auto;background:#0E1114;border-top:1px solid var(--line);display:flex;}
+.bottom-nav button{flex:1;background:none;border:none;color:var(--muted);font-family:'Oswald';font-size:10.5px;text-transform:uppercase;letter-spacing:0.04em;padding:12px 4px 10px;cursor:pointer;}
+.bottom-nav button .ic{display:block;font-size:18px;margin-bottom:3px;}
+.bottom-nav button.active{color:var(--yellow);}
+
+/* photo capture */
+.photo-box{aspect-ratio:4/3;background:var(--panel-2);border:1.5px dashed var(--line);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--muted);font-size:12.5px;cursor:pointer;overflow:hidden;position:relative;}
+.photo-box img{width:100%;height:100%;object-fit:cover;}
+.ocr-strip{display:flex;align-items:center;gap:8px;background:var(--panel-2);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:12px;color:var(--muted);}
+.ocr-strip .dot{width:7px;height:7px;border-radius:50%;background:var(--yellow);animation:pulse 1s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;}
+.kpi b{font-family:'Oswald';font-size:26px;display:block;}
+.kpi span{color:var(--muted);font-size:10.5px;text-transform:uppercase;letter-spacing:0.06em;}
+.kpi.danger b{color:var(--danger);}
+.kpi.warn b{color:var(--warn);}
+
+.tabs{display:flex;gap:6px;margin-bottom:14px;background:var(--panel-2);padding:4px;border-radius:10px;}
+.tabs button{flex:1;background:none;border:none;color:var(--muted);padding:9px 4px;border-radius:7px;font-family:'Oswald';font-size:11.5px;text-transform:uppercase;cursor:pointer;}
+.tabs button.active{background:var(--yellow);color:#20180a;}
+
+.approval-card img{width:100%;border-radius:8px;margin:10px 0;display:block;background:#000;}
+.approval-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;}
+
+.filter-row{display:flex;gap:8px;margin-bottom:12px;}
+.filter-row select{flex:1;font-size:12.5px;padding:9px 10px;}
+
+table.frota{width:100%;border-collapse:collapse;font-size:12px;}
+table.frota th{text-align:left;color:var(--muted);font-weight:500;text-transform:uppercase;font-size:9.5px;letter-spacing:0.05em;padding:6px 6px;border-bottom:1px solid var(--line);}
+table.frota td{padding:8px 6px;border-bottom:1px solid var(--line);}
+
+.rodovia-tag{display:inline-block;font-size:9.5px;font-family:'JetBrains Mono';color:var(--muted);border:1px solid var(--line);padding:2px 6px;border-radius:5px;margin-top:2px;}
+
+.coord-select{display:flex;flex-direction:column;gap:8px;margin-top:10px;}
+.coord-opt{display:flex;justify-content:space-between;align-items:center;background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;cursor:pointer;font-size:13px;}
+.coord-opt:active{border-color:var(--ok);}
+
+::-webkit-scrollbar{display:none;}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <div id="toastGlobal" class="hidden" style="position:fixed;top:14px;left:50%;transform:translateX(-50%);max-width:440px;width:90%;z-index:9999;padding:12px 16px;border-radius:10px;font-size:13.5px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,0.4);"></div>
+
+  <div class="filebar">
+    <span>calibracao-multirrodovia-<b>interface</b>.html</span>
+    <span>PROTÓTIPO · v0.1</span>
+  </div>
+
+  <!-- ============ TOPBAR / LOGO ============ -->
+  <div class="topbar">
+    <svg class="logo" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="1" y="1" width="46" height="46" rx="9" fill="#1D2226" stroke="#FFC629" stroke-width="1.5"/>
+      <path d="M24 8 L38 14 V24 C38 33 32 39 24 42 C16 39 10 33 10 24 V14 Z" fill="none" stroke="#FFC629" stroke-width="1.6"/>
+      <path d="M24 16 V30 M17 23 H31" stroke="#FFC629" stroke-width="2.4" stroke-linecap="round"/>
+    </svg>
+    <div class="brand">
+      <h1>São Francisco</h1>
+      <span>Resgate Rodoviário · Calibração</span>
+    </div>
+  </div>
+  <div class="roadline"></div>
+
+  <!-- ============ SCREEN: ROLE SELECT ============ -->
+  <div class="screen" id="screen-role">
+    <p class="eyebrow">Sistema de Calibração</p>
+    <h2 class="title">Quem está acessando?</h2>
+    <div class="role-grid">
+      <div class="role-card colab" onclick="go('colab-login')">
+        <div class="ic">📷</div>
+        <b>Colaborador</b>
+        <span>Registrar calibração</span>
+      </div>
+      <div class="role-card gestor" onclick="go('gestor-login')">
+        <div class="ic">🗂️</div>
+        <b>Gestor</b>
+        <span>Aprovar e acompanhar</span>
+      </div>
+    </div>
+    <div class="card" style="margin-top:22px;">
+      <p class="eyebrow" style="margin-bottom:8px;">Rodovias no sistema</p>
+      <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;">
+        <div style="display:flex;justify-content:space-between;"><span>Eixo SP</span><span class="mono" style="color:var(--muted);">33 viaturas</span></div>
+        <div style="display:flex;justify-content:space-between;"><span>Transbrasiliana</span><span class="mono" style="color:var(--muted);">9 viaturas</span></div>
+        <div style="display:flex;justify-content:space-between;"><span>Via Rondon</span><span class="mono" style="color:var(--muted);">10 viaturas</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ COLABORADOR: LOGIN (matrícula) ============ -->
+  <div class="screen hidden" id="screen-colab-login">
+    <span class="link-back" onclick="go('role')">← voltar</span>
+    <p class="eyebrow">Colaborador</p>
+    <h2 class="title">Informe sua matrícula</h2>
+    <label>Matrícula</label>
+    <input id="matricula" placeholder="Ex: 10527" inputmode="numeric">
+    <p style="font-size:11.5px;color:var(--muted);margin-top:8px;">Cadastro inicial: 28 colaboradores já vinculados (Eixo, Transbrasiliana, Rondon, Entrevias, Triângulo Mineiro). As demais rodovias ainda não têm ninguém cadastrado.</p>
+    <p style="font-size:11.5px;color:var(--yellow);margin-top:4px;">Pra só olhar a interface agora, deixe o campo em branco e toque em Entrar.</p>
+    <button class="btn btn-primary" onclick="loginColab()">Entrar</button>
+    <div id="loginColabMsg" class="hidden" style="margin-top:12px;padding:10px 12px;border-radius:8px;font-size:13px;"></div>
+    <p style="font-size:11px;color:var(--muted);margin-top:14px;">Sua matrícula já vem vinculada à sua rodovia — não é possível trocar. Se estiver errada, fale com seu coordenador.</p>
+  </div>
+
+  <!-- ============ COLABORADOR: HOME (prefixos) ============ -->
+  <div class="screen hidden" id="screen-colab-home">
+    <p class="eyebrow" id="colab-rodovia-label">Rodovia</p>
+    <h2 class="title" style="margin-bottom:4px;">Selecione a viatura</h2>
+    <p style="color:var(--muted);font-size:12.5px;margin:0 0 16px;"><span id="colab-nome-label" style="color:var(--ink);font-weight:600;"></span> · matrícula <span class="mono" id="colab-matricula-label"></span></p>
+    <div class="locked-banner">
+      <span>🔒</span>
+      <span>Você só visualiza e registra viaturas da <b id="colab-rodovia-nome"></b>. Acesso a outras rodovias é bloqueado.</span>
+    </div>
+    <div id="testeRodoviaBox" class="hidden" style="margin-bottom:16px;">
+      <label style="margin-top:0;color:var(--yellow);">🧪 Modo teste — trocar rodovia livremente</label>
+      <select id="testeRodoviaSelect" onchange="trocarRodoviaTeste(this.value)"></select>
+    </div>
+    <div class="grid-2" id="prefix-grid"></div>
+  </div>
+
+  <!-- ============ COLABORADOR: LISTA DE EQUIPAMENTOS DA VIATURA ============ -->
+  <div class="screen hidden" id="screen-colab-equip">
+    <span class="link-back" onclick="go('colab-home')">← trocar viatura</span>
+    <p class="eyebrow" id="equip-prefix-label">Viatura</p>
+    <h2 class="title" style="margin-bottom:12px;">Equipamentos</h2>
+    <div class="tabs">
+      <button id="tabCategoriaCalibracao" class="active" onclick="trocarCategoria('calibracao')">Calibração</button>
+      <button id="tabCategoriaEpi" onclick="trocarCategoria('epi')">EPI / EPC</button>
+    </div>
+    <div class="card" style="padding:6px 12px;" id="equip-list"></div>
+  </div>
+
+  <!-- ============ COLABORADOR: CAPTURA (foto + OCR + formulário) ============ -->
+  <div class="screen hidden" id="screen-colab-capture">
+    <span class="link-back" onclick="go('colab-equip')">← equipamentos</span>
+    <p class="eyebrow" id="capture-prefix-label">Viatura</p>
+    <h2 class="title" id="capture-equip-label" style="margin-bottom:14px;">Equipamento</h2>
+
+    <div class="locked-banner" style="border-color:var(--yellow-dim);background:rgba(255,198,41,0.09);">
+      <span>🏷️</span>
+      <span>Fotografe a <b id="capture-etiqueta-tipo">etiqueta de calibração colada neste equipamento</b> — <b id="capture-equip-example">Manômetro Direito</b>. Não fotografe outro item igual da mesma viatura por engano.</span>
+    </div>
+
+    <label style="margin-top:0;">Foto da etiqueta</label>
+    <label class="photo-box" id="photoBox" for="photoInput">
+      <span style="font-size:26px;">📷</span>
+      <span id="photoBoxHint">Toque para fotografar a etiqueta</span>
+    </label>
+    <input type="file" id="photoInput" accept="image/*" capture="environment" style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;" onchange="handlePhoto(event)">
+    <div class="ocr-strip hidden" id="ocrStrip"><span class="dot"></span><span id="ocrStatus">Lendo etiqueta…</span></div>
+
+    <div class="card hidden" id="confirmBox" style="border-color:var(--yellow-dim);background:rgba(255,198,41,0.06);margin-top:12px;">
+      <p class="eyebrow" style="margin-bottom:8px;">O sistema leu isto:</p>
+      <div style="font-size:13.5px;line-height:1.7;">
+        <span id="confirmCertLabel">Código</span>: <b class="mono" id="confirmCert">—</b><br>
+        <span id="confirmDataLabel">Data da calibração</span>: <b class="mono" id="confirmData">—</b>
+      </div>
+      <p style="font-size:12px;color:var(--muted);margin:10px 0 4px;">Está correto?</p>
+      <div class="approval-actions">
+        <button class="btn btn-danger" style="margin-top:0;" onclick="ocrNaoConfere()">Não, corrigir</button>
+        <button class="btn btn-ok" style="margin-top:0;" onclick="ocrConfirmar()">Sim, está certo</button>
+      </div>
+    </div>
+
+    <div id="manualFields">
+      <div id="normaInfo" class="hidden" style="font-size:12px;color:var(--muted);background:var(--panel-2);border-radius:8px;padding:8px 12px;margin-top:14px;">Norma: <b class="mono" style="color:var(--ink);" id="normaTexto">—</b></div>
+      <label id="fCertLabel">Código</label>
+      <input id="fCert" placeholder="Ex: TIXR2050">
+      <label id="fDataLabel">Data da calibração</label>
+      <input id="fData" type="date">
+      <label id="fVencLabel">Vencimento (calculado automaticamente)</label>
+      <input id="fVenc" readonly style="color:var(--muted);">
+    </div>
+
+    <button class="btn btn-primary" onclick="submitCapture()">Enviar para aprovação</button>
+    <p style="font-size:11px;color:var(--muted);margin-top:10px;text-align:center;">O registro fica <b style="color:var(--yellow);">pendente</b> até o gestor aprovar. Depois de aprovado, só o gestor pode alterar.</p>
+  </div>
+
+  <!-- ============ COLABORADOR: MEUS ENVIOS ============ -->
+  <div class="screen hidden" id="screen-colab-envios">
+    <p class="eyebrow">Meus envios</p>
+    <h2 class="title">Histórico</h2>
+    <div id="envios-list"></div>
+  </div>
+
+  <!-- bottom nav colaborador -->
+  <div class="bottom-nav hidden" id="nav-colab">
+    <button onclick="go('colab-home')" id="nav-c-home"><span class="ic">🚑</span>Viaturas</button>
+    <button onclick="go('colab-envios')" id="nav-c-envios"><span class="ic">📋</span>Meus envios</button>
+    <button onclick="go('role')"><span class="ic">↩︎</span>Sair</button>
+  </div>
+
+  <!-- ============ GESTOR: LOGIN ============ -->
+  <div class="screen hidden" id="screen-gestor-login">
+    <span class="link-back" onclick="go('role')">← voltar</span>
+    <p class="eyebrow">Gestor</p>
+    <h2 class="title">Acesso do coordenador</h2>
+    <label>Usuário</label>
+    <input id="gestorUsuario" placeholder="Ex: falcao" autocapitalize="off">
+    <label>Senha</label>
+    <input id="gestorSenha" type="password" placeholder="••••••••">
+    <button class="btn btn-primary" onclick="loginGestor()">Entrar</button>
+    <div id="loginGestorMsg" class="hidden" style="margin-top:12px;padding:10px 12px;border-radius:8px;font-size:13px;background:rgba(229,72,77,0.12);color:var(--danger);border:1px solid rgba(229,72,77,0.4);"></div>
+    <p style="font-size:11px;color:var(--muted);margin-top:12px;">⚠️ Senhas ainda são provisórias (ver lista abaixo) — trocar quando o backend real estiver plugado.</p>
+    <p style="font-size:11.5px;color:var(--yellow);margin-top:4px;">Pra só olhar a interface agora, deixe usuário e senha em branco e toque em Entrar (entra como Falcão, acesso total).</p>
+    <div class="coord-select" id="coord-select" style="margin-top:10px;"></div>
+  </div>
+
+  <!-- ============ GESTOR: DASHBOARD ============ -->
+  <div class="screen hidden" id="screen-gestor-dash">
+    <p class="eyebrow" id="gestor-rodovia-label">Rodovia</p>
+    <h2 class="title" style="margin-bottom:8px;" id="gestor-nome-label">Painel</h2>
+    <select id="filtroRodoviaGestor" onchange="trocarRodoviaGestor(this.value)" style="margin-bottom:14px;"></select>
+
+    <div class="kpi-grid">
+      <div class="kpi danger"><b id="kpi-vencidos">0</b><span>Vencidos</span></div>
+      <div class="kpi warn"><b id="kpi-mes">0</b><span>Vencem no mês</span></div>
+      <div class="kpi"><b id="kpi-trimestre">0</b><span>No trimestre</span></div>
+      <div class="kpi"><b id="kpi-semestre">0</b><span>No semestre</span></div>
+    </div>
+
+    <div class="tabs">
+      <button class="active" data-tab="aprov" onclick="setGestorTab('aprov')">Aprovações</button>
+      <button data-tab="frota" onclick="setGestorTab('frota')">Frota</button>
+      <button data-tab="alertas" onclick="setGestorTab('alertas')">Alertas</button>
+    </div>
+
+    <div id="relatorio-box" style="margin-bottom:14px;"></div>
+
+    <!-- APROVAÇÕES -->
+    <div id="tab-aprov"></div>
+
+    <!-- FROTA -->
+    <div id="tab-frota" class="hidden">
+      <div class="filter-row">
+        <select id="filtroBase"><option value="">Todas as bases</option></select>
+        <select id="filtroPrefixo"><option value="">Todos os prefixos</option></select>
+      </div>
+      <div class="card hidden" id="frota-empty" style="text-align:center;color:var(--muted);font-size:12.5px;">
+        Ainda sem planilha de ativos cadastrada para esta rodovia.<br>Assim que a lista de equipamentos chegar, a frota aparece aqui.
+      </div>
+      <div class="card" id="frota-wrap" style="overflow-x:auto;padding:8px;">
+        <table class="frota" id="frota-table"></table>
+      </div>
+    </div>
+
+    <!-- ALERTAS -->
+    <div id="tab-alertas" class="hidden"></div>
+  </div>
+
+  <!-- bottom nav gestor -->
+  <div class="bottom-nav hidden" id="nav-gestor">
+    <button onclick="go('gestor-dash')"><span class="ic">📊</span>Painel</button>
+    <button onclick="go('role')"><span class="ic">↩︎</span>Sair</button>
+  </div>
+
+</div>
+
+<script>
+/* ===================== DADOS BASE ===================== */
+const EQUIP_SETS = {
+  RESGATE: ["Desencarcerador","Luva isolante cl0 tp2 esquerda","Luva isolante cl0 tp2 direita","Tapete isolante classe 0 inteiriço",
+    "Esfigmomanômetro Adulto","Esfigmomanômetro Obeso","Esfigmomanômetro Infantil",
+    "Manômetro Direito","Manômetro Esquerdo","Manômetro Baby",
+    "Oxímetro de Pulso Adulto","Termohigrômetro","Termômetro Clínico","Câmera Térmica"],
+  UTI: ["Desencarcerador","Luva isolante cl0 tp2 esquerda","Luva isolante cl0 tp2 direita","Tapete isolante classe 0 inteiriço",
+    "Esfigmomanômetro Adulto","Esfigmomanômetro Obeso","Esfigmomanômetro Infantil",
+    "Manômetro Direito","Manômetro Esquerdo","Manômetro Baby","Valvula de pressao",
+    "Oxímetro de Pulso Adulto","Termohigrômetro","Termômetro Clínico","Câmera Térmica",
+    "Cardioversor","Respirador Portátil 2000"]
+};
+
+// Prefixo fixo de letras do "Código" da etiqueta, por equipamento (extraído da base real da
+// Eixo SP). O colaborador só digita/confirma os números que vêm depois do prefixo.
+// Desencarcerador, Luva isolante e Tapete isolante não seguem esse padrão (usam código de norma) —
+// ficam de fora até você mandar o padrão deles.
+const CODIGO_PREFIXO = {
+  "Termohigrômetro": "TIXR",
+  "Termômetro Clínico": "TIXR",
+  "Câmera Térmica": "TIXR",
+  "Manômetro Direito": "PIXR",
+  "Manômetro Esquerdo": "PIXR",
+  "Manômetro Baby": "PIXR",
+  "Esfigmomanômetro Adulto": "PIXR",
+  "Esfigmomanômetro Obeso": "PIXR",
+  "Esfigmomanômetro Infantil": "PIXR",
+  "Valvula de pressao": "PIXR",
+  "Respirador Portátil 2000": "PIXR",
+  "Oxímetro de Pulso Adulto": "EIXR",
+  "Cardioversor": "EIXR"
+};
+
+// Luva isolante e Tapete isolante não são "calibrados" — passam por ENSAIO DIELÉTRICO (NR10).
+// A etiqueta deles traz a norma técnica (fixa por item) em vez de um código individual.
+const NORMA_ENSAIO = {
+  "Luva isolante cl0 tp2 esquerda": "NBR IEC 60903 - NR10",
+  "Luva isolante cl0 tp2 direita": "NBR IEC 60903 - NR10",
+  "Tapete isolante classe 0 inteiriço": "IEC 61111 - NR10"
+};
+function isEnsaio(equip){ return !!NORMA_ENSAIO[equip]; }
+
+// EPI/EPC — lista PROVISÓRIA, mesma pra Resgate e UTI. Substituir pelos itens reais quando
+// o usuário mandar a lista das viaturas (capacete, colete, extintor, sinalização etc.)
+const EPI_EPC_SET = [
+  "Filtro PP", "Máscara Full Face", "Macacão Tyvek", "Luva de PVC",
+  "Blusa de aproximação", "Calça de aproximação", "Balaclava",
+  "Extintor PQS ou ABC", "Capacete de incêndio", "Cinto paraquedas"
+];
+
+// Validade fixa (em meses) por item, contada a partir da fabricação — AINDA PENDENTE.
+// O usuário vai mandar marca + tempo de validade de cada item (tem uns de 3 anos, outros de 5).
+// Enquanto um item não tiver entrada aqui, o app NÃO calcula vencimento sozinho: exige que o
+// colaborador digite a validade explícita que estiver escrita no próprio equipamento.
+const VALIDADE_EPI_MESES = {
+  // "Extintor PQS ou ABC": 12,   // exemplo de como preencher quando o usuário mandar os dados
+};
+
+// Regra de quantidade: USA/UTI sempre precisa de 3 (médico + enfermeiro + socorrista).
+// Viatura de Resgate: 3 em rodovia federal (exige 3 socorristas), 2 em rodovia estadual.
+function quantidadeExigida(rodoviaKey, prefixoTipo){
+  if(prefixoTipo === 'UTI') return 3;
+  const esfera = RODOVIAS[rodoviaKey].esfera;
+  if(esfera === 'federal') return 3;
+  if(esfera === 'estadual') return 2;
+  return null; // esfera ainda não confirmada — não arriscar número errado
+}
+
+const RODOVIAS = {
+  "eixo-sp": {
+    nome: "Eixo SP",
+    esfera: "estadual",
+    prefixos: [
+      {p:"AB3001",base:"Itirapina",tipo:"RESGATE"},{p:"AB3003",base:"Cordeirópolis",tipo:"RESGATE"},
+      {p:"AB3004",base:"Ipeúna",tipo:"RESGATE"},{p:"AB3005",base:"Piracicaba",tipo:"RESGATE"},
+      {p:"AB3007",base:"São Pedro",tipo:"RESGATE"},{p:"AB3008",base:"Torrinha",tipo:"RESGATE"},
+      {p:"AB3009",base:"Dois Córregos",tipo:"RESGATE"},{p:"AB3011",base:"Boracéia",tipo:"RESGATE"},
+      {p:"AB3012",base:"Bauru",tipo:"RESGATE"},{p:"AB3013",base:"Piratininga",tipo:"RESGATE"},
+      {p:"AB3014",base:"Duartina",tipo:"RESGATE"},{p:"AB3015",base:"Lupércio",tipo:"RESGATE"},
+      {p:"AB3016",base:"Oriente",tipo:"RESGATE"},{p:"AB3018",base:"Universo",tipo:"RESGATE"},
+      {p:"AB3019",base:"Osvaldo Cruz",tipo:"RESGATE"},{p:"AB3020",base:"Adamantina",tipo:"RESGATE"},
+      {p:"AB3021",base:"Junqueirópolis",tipo:"RESGATE"},{p:"AB3022",base:"Santa Mercedes",tipo:"RESGATE"},
+      {p:"AB3023",base:"Guaçhos",tipo:"RESGATE"},{p:"AB3025",base:"Rancharia",tipo:"RESGATE"},
+      {p:"AB3026",base:"Quatá",tipo:"RESGATE"},{p:"AB3027",base:"Assis",tipo:"RESGATE"},
+      {p:"AB3028",base:"Marília",tipo:"RESGATE"},{p:"AB3029",base:"Gália",tipo:"RESGATE"},
+      {p:"AB3030",base:"Guarapuã",tipo:"RESGATE"},{p:"AB3031",base:"Brotas",tipo:"RESGATE"},
+      {p:"AB3032",base:"Itirapina II",tipo:"RESGATE"},{p:"AB3042R",base:"Baseada em Duartina",tipo:"RESGATE"},
+      {p:"USA3001",base:"Rio Claro",tipo:"UTI"},{p:"USA3002",base:"Jaú",tipo:"UTI"},
+      {p:"USA3003",base:"Herculândia",tipo:"UTI"},{p:"USA3004",base:"Regente Feijó",tipo:"UTI"},
+      {p:"RESERVA",base:"Escritório",tipo:"RESGATE"}
+    ]
+  },
+  "transbrasiliana": {
+    nome: "Transbrasiliana",
+    esfera: "federal",
+    prefixos: [
+      {p:"Resgate 01",base:"a definir",tipo:"RESGATE"},{p:"Resgate 02",base:"a definir",tipo:"RESGATE"},
+      {p:"Resgate 03",base:"a definir",tipo:"RESGATE"},{p:"Resgate 04",base:"a definir",tipo:"RESGATE"},
+      {p:"Resgate 05",base:"a definir",tipo:"RESGATE"},{p:"Resgate 06",base:"a definir",tipo:"RESGATE"},
+      {p:"Resgate 07",base:"a definir",tipo:"RESGATE"},{p:"UTI 01",base:"a definir",tipo:"UTI"},
+      {p:"UTI 02",base:"a definir",tipo:"UTI"}
+    ]
+  },
+  "via-rondon": {
+    nome: "Via Rondon",
+    esfera: "estadual",
+    prefixos: [
+      {p:"Resgate 01",base:"a definir",tipo:"RESGATE"},{p:"Resgate 02",base:"a definir",tipo:"RESGATE"},
+      {p:"Resgate 03",base:"a definir",tipo:"RESGATE"},{p:"Resgate 04",base:"a definir",tipo:"RESGATE"},
+      {p:"USA 01",base:"a definir",tipo:"UTI"},{p:"Resgate 06",base:"a definir",tipo:"RESGATE"},
+      {p:"Resgate 07",base:"a definir",tipo:"RESGATE"},{p:"Resgate 08",base:"a definir",tipo:"RESGATE"},
+      {p:"Resgate 09",base:"a definir",tipo:"RESGATE"},{p:"Resgate 10",base:"a definir",tipo:"RESGATE"}
+    ]
+  },
+  "cart-marcelo-fernandes": {nome:"Cart. Marcelo Fernandes", esfera:"verificar", prefixos:[]},
+  "via-campo": {nome:"Via Campo", esfera:"verificar", prefixos:[]},
+  "ecoriominas": {nome:"Ecoriominas", esfera:"federal", prefixos:[]},
+  "via-castelo": {nome:"Via Castelo", esfera:"verificar", prefixos:[]},
+  "fluminense": {nome:"Fluminense", esfera:"federal", prefixos:[]},
+  "rodoanel": {nome:"Rodoanel", esfera:"estadual", prefixos:[]},
+  "intervias": {nome:"Intervias", esfera:"estadual", prefixos:[]},
+  "entrevias": {nome:"Entrevias", esfera:"estadual", prefixos:[]},
+  "triangulo-mineiro": {nome:"Triângulo Mineiro", esfera:"verificar", prefixos:[]},
+  "sul-de-minas": {nome:"Sul de Minas", esfera:"verificar", prefixos:[]},
+  "via-paulista": {nome:"Via Paulista", esfera:"estadual", prefixos:[]},
+  "via-mineira": {nome:"Via Mineira", esfera:"verificar", prefixos:[]},
+  "via-araucaria": {nome:"Via Araucária", esfera:"misto", prefixos:[]},
+  "iguacu": {nome:"Iguaçu", esfera:"verificar", prefixos:[]}
+};
+
+// Rodovias com dados reais/prontas pra uso agora — as outras ficam de fora dos seletores
+// de troca até terem ativos e colaboradores cadastrados.
+const RODOVIAS_ATIVAS = ["eixo-sp", "transbrasiliana", "via-rondon"];
+
+// matrícula -> rodovia — extraído da planilha "Controle de Ajustes - SFR" (aba KV, log de
+// trocas/plantões recentes). Cobre só quem apareceu nesse log; ainda faltam as outras rodovias.
+const MATRICULAS = {
+  "00010527": "eixo-sp", "00011062": "eixo-sp", "00011825": "eixo-sp", "00015081": "eixo-sp",
+  "00012240": "eixo-sp", "00012842": "eixo-sp",
+  "00015885": "transbrasiliana", "00015551": "transbrasiliana", "00009484": "transbrasiliana",
+  "00015422": "transbrasiliana", "00009481": "transbrasiliana",
+  "00011736": "via-rondon",
+  "00008604": "entrevias", "00010957": "entrevias", "00010857": "entrevias", "00008555": "entrevias",
+  "00008610": "entrevias", "00014387": "entrevias", "00014577": "entrevias", "00013418": "entrevias",
+  "15013818": "entrevias", "15004960": "entrevias", "15008088": "entrevias", "15015633": "entrevias",
+  "15015241": "entrevias",
+  "00015452": "triangulo-mineiro", "00012839": "triangulo-mineiro", "00007999": "triangulo-mineiro",
+  "00008805": "triangulo-mineiro"
+};
+
+// nome do colaborador por matrícula — mesma origem da lista acima ("Controle de Ajustes - SFR")
+const NOMES = {
+  "00010527": "Claudia de Oliveira Guerra",
+  "00011062": "Rafaela Cristina Porto dos Santos",
+  "00011825": "Marcio dos Santos",
+  "00015081": "Rodrigo Duarte de Morais",
+  "00012240": "Vanderlei Nascimento",
+  "00012842": "Patricia Marques",
+  "00015885": "Nicolas Felippe Ribeiro Souza",
+  "00015551": "Luan Augusto Rosa Falchette",
+  "00009484": "Gustavo Santana Moreira",
+  "00015422": "Rafael Alves dos Santos Paulino",
+  "00009481": "Angel Evaristo Corrales Martinez",
+  "00011736": "Silvana Cristina Campos da Silva",
+  "00008604": "Jonatan Cesar Neves da Fonseca",
+  "00010957": "Michele da Cruz Rodrigues Tavares",
+  "00010857": "Marco Antonio da Silva",
+  "00008555": "Jeferson Wilian dos Santos",
+  "00008610": "Elias Ketelhut",
+  "00014387": "Amauri do Amaral Pugliessa",
+  "00014577": "Richard Eduardo Sartorio",
+  "00013418": "Mayara Zucatelli Pereira",
+  "15013818": "Jeferson Wilian dos Santos",
+  "15004960": "Anderson Ricardo de Oliveira Moreira",
+  "15008088": "Carlos Eduardo Batista",
+  "15015633": "Gabriel Tosta Rodrigues da Cunha",
+  "15015241": "Lucas Daniel de Lima Candido",
+  "00015452": "Cristiano Abadio Pimentel",
+  "00012839": "Elaine Cristina Oliveira Santos",
+  "00007999": "Deusimar Lopes Pereira Junior",
+  "00008805": "Juarez Salerno Junior"
+};
+
+// Coordenadores — um coordenador pode responder por mais de uma rodovia.
+// Falcão (dono da conta) tem acessoTotal: enxerga TODAS as rodovias com filtro.
+const COORDENADORES = [
+  {nome:"Falcão", usuario:"falcao", senha:"sfr2026", rodovias:["eixo-sp","transbrasiliana","via-rondon"], acessoTotal:true},
+  {nome:"Marcelo Fernandes", usuario:"marcelo.fernandes", senha:"sfr2026", rodovias:["cart-marcelo-fernandes","via-campo"]},
+  {nome:"Felipe Torres / Felipe Sangrilard Morvan", usuario:"felipe.torres", senha:"sfr2026", rodovias:["ecoriominas"]},
+  {nome:"Fabieli", usuario:"fabieli", senha:"sfr2026", rodovias:["via-castelo"]},
+  {nome:"Waldson", usuario:"waldson", senha:"sfr2026", rodovias:["fluminense"]},
+  {nome:"Mateus", usuario:"mateus", senha:"sfr2026", rodovias:["rodoanel"]},
+  {nome:"Luiz Azevedo", usuario:"luiz.azevedo", senha:"sfr2026", rodovias:["intervias"]},
+  {nome:"Rodrigo Pelicano", usuario:"rodrigo.pelicano", senha:"sfr2026", rodovias:["entrevias","triangulo-mineiro","sul-de-minas"]},
+  {nome:"Guilherme", usuario:"guilherme", senha:"sfr2026", rodovias:["via-paulista"]},
+  {nome:"Daniel", usuario:"daniel", senha:"sfr2026", rodovias:["via-mineira"]},
+  {nome:"Marcelo Silva", usuario:"marcelo.silva", senha:"sfr2026", rodovias:["via-araucaria"]},
+  {nome:"Andressa", usuario:"andressa", senha:"sfr2026", rodovias:["iguacu"]}
+];
+
+// Dados REAIS da rodovia Eixo SP (planilha "CALIBRAÇÃO EIXO SP", 482 registros já com
+// vencimento recalculado). [prefixo, aparelho, certificado, dataCalibração, vencimento]
+// Transbrasiliana e Via Rondon NÃO têm planilha própria ainda — por isso não aparecem aqui.
+const EIXO_REAL = [["AB3001", "Termohigrômetro", "002490/2025", "2025-08-08", "2026-08-31"], ["AB3001", "Desencarcerador", "1018308", "2026-03-25", "2027-03-31"], ["AB3001", "Luva isolante cl0 tp2 esquerda", "52365", "2026-03-19", "2026-09-30"], ["USA3001", "Esfigmomanômetro Adulto", "001958/2026", "2026-06-09", "2027-06-30"], ["USA3001", "Esfigmomanômetro Obeso", "001961/2026", "2026-06-09", "2027-06-30"], ["USA3001", "Esfigmomanômetro Infantil", "001962/2026", "2026-06-09", "2027-06-30"], ["USA3001", "Manômetro Direito", "001602/2026", "2026-04-28", "2027-04-30"], ["USA3001", "Manômetro Esquerdo", "001979/2026", "2026-06-09", "2027-06-30"], ["USA3001", "Manômetro Baby", "001975/2026", "2026-06-09", "2027-06-30"], ["USA3001", "Valvula de pressao", "001718/2026", "2026-05-11", "2027-05-31"], ["AB3001", "Esfigmomanômetro Adulto", "002072/2025", "2025-07-03", "2026-07-31"], ["USA3001", "Termohigrômetro", "001034/2026", "2026-03-03", "2027-03-31"], ["AB3001", "Esfigmomanômetro Obeso", "002151/2025", "2025-07-10", "2026-07-31"], ["USA3001", "Câmera Térmica", "001003/2026", "2026-02-26", "2027-02-26"], ["USA3001", "Cardioversor", "000945/2026", "2026-02-23", "2027-02-26"], ["AB3001", "Esfigmomanômetro Infantil", "002153/2025", "2025-07-10", "2026-07-31"], ["AB3001", "Luva isolante cl0 tp2 direita", "52365", "2026-03-19", "2026-09-30"], ["AB3001", "Tapete isolante classe 0 inteiriço", "52367", "2026-03-19", "2026-09-30"], ["AB3003", "Desencarcerador", "1018308", "2026-03-25", "2027-03-31"], ["AB3003", "Luva isolante cl0 tp2 esquerda", "52365", "2026-03-19", "2026-09-30"], ["AB3003", "Luva isolante cl0 tp2 direita", "52365", "2026-03-19", "2026-09-30"], ["AB3003", "Tapete isolante classe 0 inteiriço", "52367", "2026-03-19", "2026-09-30"], ["USA3002", "Esfigmomanômetro Adulto", "001960/2026", "2026-06-09", "2027-06-30"], ["USA3002", "Esfigmomanômetro Obeso", "001366/2026", "2026-03-25", "2027-03-31"], ["USA3002", "Manômetro Direito", "001370/2026", "2026-03-25", "2027-03-31"], ["USA3002", "Manômetro Esquerdo", "001372/2026", "2026-03-25", "2027-03-31"], ["USA3002", "Manômetro Baby", "001368/2026", "2026-03-25", "2027-03-31"], ["USA3002", "Valvula de pressao", "002955/2025", "2025-10-24", "2026-10-30"], ["AB3004", "Desencarcerador", "1018308", "2026-03-25", "2027-03-31"], ["AB3001", "Termômetro Clínico", "002245/2025", "2025-07-28", "2026-07-31"], ["AB3003", "Manômetro Direito", "002265/2025", "2025-07-28", "2026-07-31"], ["USA3002", "Câmera Térmica", "001130/2026", "2026-03-11", "2027-03-31"], ["USA3002", "Cardioversor", "003138/2025", "2025-12-12", "2026-12-31"], ["AB3003", "Manômetro Esquerdo", "002272/2025", "2025-07-25", "2026-07-31"], ["AB3003", "Manômetro Baby", "002261/2025", "2025-07-28", "2026-07-31"], ["AB3004", "Luva isolante cl0 tp2 esquerda", "52365", "2026-03-19", "2026-09-30"], ["AB3004", "Luva isolante cl0 tp2 direita", "52365", "2026-03-19", "2026-09-30"], ["AB3004", "Tapete isolante classe 0 inteiriço", "52367", "2026-03-19", "2026-09-30"], ["AB3005", "Esfigmomanômetro Adulto", "002478/2025", "2025-08-08", "2026-08-31"], ["USA3003", "Esfigmomanômetro Adulto", "003149/2025", "2025-12-11", "2026-12-31"], ["USA3003", "Esfigmomanômetro Obeso", "001711/2026", "2026-05-11", "2027-05-31"], ["USA3003", "Esfigmomanômetro Infantil", "001717/2026", "2026-05-11", "2027-05-31"], ["USA3003", "Manômetro Direito", "003176/2025", "2025-12-12", "2026-12-31"], ["USA3003", "Manômetro Esquerdo", "003169/2025", "2025-12-12", "2026-12-31"], ["USA3003", "Manômetro Baby", "003165/2025", "2025-12-11", "2026-12-31"], ["AB3005", "Termohigrômetro", "002494/2025", "2025-08-08", "2026-08-31"], ["USA3003", "Oxímetro de Pulso Adulto", "000331/2026", "2026-01-20", "2027-01-29"], ["AB3003", "Oxímetro de Pulso Adulto", "002076/2025", "2025-07-03", "2026-07-31"], ["AB3004", "Esfigmomanômetro Adulto", "002075/2025", "2025-07-03", "2026-07-31"], ["USA3003", "Câmera Térmica", "001123/2026", "2026-03-11", "2027-03-31"], ["AB3005", "Desencarcerador", "1018308", "2026-03-25", "2027-03-31"], ["AB3004", "Esfigmomanômetro Obeso", "002073/2025", "2025-07-03", "2026-07-31"], ["AB3005", "Luva isolante cl0 tp2 esquerda", "52365", "2026-03-19", "2026-09-30"], ["AB3005", "Luva isolante cl0 tp2 direita", "52365", "2026-03-19", "2026-09-30"], ["AB3005", "Tapete isolante classe 0 inteiriço", "52367", "2026-03-19", "2026-09-30"], ["AB3007", "Termohigrômetro", "002496/2025", "2025-08-08", "2026-08-31"], ["AB3007", "Desencarcerador", "1018308", "2026-03-25", "2027-03-31"], ["AB3004", "Manômetro Direito", "002271/2025", "2025-07-28", "2026-07-31"], ["USA3004", "Esfigmomanômetro Adulto", "002954/2025", "2025-10-24", "2026-10-30"], ["USA3004", "Esfigmomanômetro Obeso", "002952/2025", "2025-10-24", "2026-10-30"], ["USA3004", "Manômetro Direito", "001592/2026", "2026-04-28", "2027-04-30"], ["USA3004", "Manômetro Esquerdo", "001591/2026", "2026-04-28", "2027-04-30"], ["USA3004", "Manômetro Baby", "001369/2026", "2026-03-25", "2027-03-31"], ["AB3005", "Esfigmomanômetro Obeso", "002074/2025", "2025-07-03", "2026-07-31"], ["USA3004", "Oxímetro de Pulso Adulto", "000345/2026", "2026-01-20", "2027-01-29"], ["USA3004", "Termohigrômetro", "001588/2026", "2026-04-28", "2027-04-30"], ["USA3004", "Termômetro Clínico", "001951/2026", "2026-06-08", "2027-06-30"], ["USA3004", "Câmera Térmica", "001124/2026", "2026-03-11", "2027-03-31"], ["AB3007", "Luva isolante cl0 tp2 esquerda", "52365", "2026-03-19", "2026-09-30"], ["AB3005", "Manômetro Direito", "002262/2025", "2025-07-25", "2026-07-31"], ["AB3007", "Luva isolante cl0 tp2 direita", "52365", "2026-03-19", "2026-09-30"], ["AB3007", "Tapete isolante classe 0 inteiriço", "52367", "2026-03-19", "2026-09-30"], ["AB3008", "Desencarcerador", "1018308", "2026-03-25", "2027-03-31"], ["AB3008", "Manômetro Direito", "002763/2025", "2025-09-11", "2026-09-30"], ["AB3008", "Luva isolante cl0 tp2 esquerda", "52365", "2026-03-19", "2026-09-30"], ["AB3008", "Luva isolante cl0 tp2 direita", "52365", "2026-03-19", "2026-09-30"], ["AB3001", "Câmera Térmica", "001002/2026", "2026-02-26", "2027-02-26"], ["AB3008", "Tapete isolante classe 0 inteiriço", "51521", "2026-02-20", "2026-08-31"], ["AB3008", "Termohigrômetro", "002081/2025", "2025-07-03", "2026-07-31"], ["AB3008", "Termômetro Clínico", "002254/2025", "2025-07-28", "2026-07-31"], ["AB3001", "Manômetro Direito", "000547/2026", "2026-02-03", "2027-02-26"], ["AB3001", "Manômetro Esquerdo", "000549/2026", "2026-02-03", "2027-02-26"], ["AB3001", "Manômetro Baby", "000540/2026", "2026-02-03", "2027-02-26"], ["AB3001", "Oxímetro de Pulso Adulto", "000350/2026", "2026-01-20", "2027-01-29"], ["AB3009", "Desencarcerador", "1018308", "2026-03-25", "2027-03-31"], ["AB3013", "Esfigmomanômetro Adulto", "002235/2025", "2025-07-28", "2026-07-31"], ["AB3009", "Termohigrômetro", "002616/2025", "2025-08-29", "2026-08-31"], ["AB3009", "Luva isolante cl0 tp2 esquerda", "52365", "2026-03-19", "2026-09-30"], ["AB3009", "Luva isolante cl0 tp2 direita", "52365", "2026-03-19", "2026-09-30"], ["AB3009", "Tapete isolante classe 0 inteiriço", "52367", "2026-03-19", "2026-09-30"], ["AB3011", "Desencarcerador", "1018308", "2026-03-25", "2027-03-31"], ["AB3003", "Câmera Térmica", "001004/2026", "2026-02-26", "2027-02-26"], ["AB3003", "Esfigmomanômetro Adulto", "001969/2026", "2026-06-09", "2027-06-30"], ["AB3003", "Esfigmomanômetro Obeso", "001955/2026", "2026-06-09", "2027-06-30"], ["AB3003", "Esfigmomanômetro Infantil", "003151/2025", "2025-12-11", "2026-12-31"], ["AB3013", "Oxímetro de Pulso Adulto", "002077/2025", "2025-07-03", "2026-07-31"], ["AB3013", "Termohigrômetro", "002258/2025", "2025-07-28", "2026-07-31"], ["AB3011", "Luva isolante cl0 tp2 esquerda", "52365", "2026-03-19", "2026-09-30"], ["AB3011", "Luva isolante cl0 tp2 direita", "52365", "2026-03-19", "2026-09-30"], ["AB3003", "Termohigrômetro", "001587/2026", "2026-04-28", "2027-04-30"], ["AB3003", "Termômetro Clínico", "001950/2026", "2026-06-08", "2027-06-30"], ["AB3011", "Tapete isolante classe 0 inteiriço", "51519", "2026-02-20", "2026-08-31"], ["AB3012", "Manômetro Direito", "002497/2025", "2025-08-08", "2026-08-31"], ["AB3012", "Desencarcerador", "1018308", "2026-03-25", "2027-03-31"], ["AB3012", "Oxímetro de Pulso Adulto", "002613/2025", "2025-08-29", "2026-08-31"], ["AB3012", "Luva isolante cl0 tp2 esquerda", "52365", "2026-03-19", "2026-09-30"], ["AB3004", "Câmera Térmica", "001837/2026", "2026-05-21", "2027-05-31"], ["AB3004", "Esfigmomanômetro Infantil", "003156/2025", "2025-12-11", "2026-12-31"], ["AB3012", "Luva isolante cl0 tp2 direita", "52365", "2026-03-19", "2026-09-30"], ["AB3012", "Tapete isolante classe 0 inteiriço", "52367", "2026-03-19", "2026-09-30"], ["AB3015", "Termohigrômetro", "002256/2025", "2025-07-28", "2026-07-31"], ["AB3004", "Manômetro Esquerdo", "000539/2026", "2026-02-03", "2027-02-26"], ["AB3004", "Manômetro Baby", "003168/2025", "2025-12-12", "2026-12-31"], ["AB3004", "Oxímetro de Pulso Adulto", "000351/2026", "2026-01-20", "2027-01-29"], ["AB3004", "Termohigrômetro", "001589/2026", "2026-04-28", "2027-04-30"], ["AB3004", "Termômetro Clínico", "001584/2026", "2026-04-28", "2027-04-30"], ["AB3013", "Desencarcerador", "1018308", "2026-03-25", "2027-03-31"], ["AB3013", "Luva isolante cl0 tp2 esquerda", "52365", "2026-03-19", "2026-09-30"], ["AB3013", "Luva isolante cl0 tp2 direita", "52365", "2026-03-19", "2026-09-30"], ["AB3013", "Tapete isolante classe 0 inteiriço", "52367", "2026-03-19", "2026-09-30"], ["AB3014", "Esfigmomanômetro Adulto", "002477/2025", "2025-08-08", "2026-08-31"], ["AB3016", "Esfigmomanômetro Adulto", "002230/2025", "2025-07-28", "2026-07-31"], ["AB3005", "Esfigmomanômetro Infantil", "002950/2025", "2025-10-24", "2026-10-30"], ["AB3016", "Termohigrômetro", "002082/2025", "2025-07-03", "2026-07-31"], ["AB3018", "Esfigmomanômetro Adulto", "002234/2025", "2025-07-28", "2026-07-31"], ["AB3005", "Manômetro Esquerdo", "001598/2026", "2026-04-28", "2027-04-30"], ["AB3005", "Manômetro Baby", "000548/2026", "2026-02-03", "2027-02-26"], ["AB3005", "Oxímetro de Pulso Adulto", "000340/2026", "2026-01-20", "2027-01-29"], ["AB3018", "Esfigmomanômetro Obeso", "002236/2025", "2025-07-28", "2026-07-31"], ["AB3005", "Termômetro Clínico", "001379/2026", "2026-03-25", "2027-03-31"], ["AB3005", "Câmera Térmica", "001116/2026", "2026-03-11", "2027-03-31"], ["AB3014", "Oxímetro de Pulso Adulto", "002488/2025", "2025-08-08", "2026-08-31"], ["AB3014", "Termohigrômetro", "002492/2025", "2025-08-08", "2026-08-31"], ["AB3014", "Desencarcerador", "1018308", "2026-03-25", "2027-03-31"], ["AB3014", "Luva isolante cl0 tp2 esquerda", "52365", "2026-03-19", "2026-09-30"], ["AB3014", "Luva isolante cl0 tp2 direita", "52365", "2026-03-19", "2026-09-30"], ["AB3007", "Esfigmomanômetro Adulto", "001713/2026", "2026-05-11", "2027-05-31"], ["AB3007", "Esfigmomanômetro Obeso", "003157/2025", "2025-12-11", "2026-12-31"], ["AB3007", "Esfigmomanômetro Infantil", "001729/2026", "2026-05-11", "2027-05-31"], ["AB3007", "Manômetro Direito", "003164/2025", "2025-12-11", "2026-12-31"], ["AB3007", "Manômetro Esquerdo", "001600/2026", "2026-04-28", "2027-04-30"], ["AB3007", "Manômetro Baby", "001974/2026", "2026-06-09", "2027-06-30"], ["AB3007", "Oxímetro de Pulso Adulto", "000347/2026", "2026-01-20", "2027-01-29"], ["AB3018", "Manômetro Direito", "002275/2025", "2025-07-28", "2026-07-31"], ["AB3007", "Termômetro Clínico", "001585/2026", "2026-04-28", "2027-04-30"], ["AB3007", "Câmera Térmica", "001122/2026", "2026-03-11", "2027-03-31"], ["AB3014", "Tapete isolante classe 0 inteiriço", "52367", "2026-03-19", "2026-09-30"], ["AB3015", "Esfigmomanômetro Adulto", "002479/2025", "2025-08-08", "2026-08-31"], ["AB3015", "Desencarcerador", "1018308", "2026-03-25", "2027-03-31"], ["AB3015", "Luva isolante cl0 tp2 esquerda", "52365", "2026-03-19", "2026-09-30"], ["AB3015", "Luva isolante cl0 tp2 direita", "52365", "2026-03-19", "2026-09-30"], ["AB3008", "Câmera Térmica", "001839/2026", "2026-05-21", "2027-05-31"], ["AB3008", "Esfigmomanômetro Adulto", "001712/2026", "2026-05-11", "2027-05-31"], ["AB3008", "Esfigmomanômetro Obeso", "001716/2026", "2026-05-11", "2027-05-31"], ["AB3008", "Esfigmomanômetro Infantil", "001959/2026", "2026-06-09", "2027-06-30"], ["AB3008", "Manômetro Esquerdo", "001980/2026", "2026-06-09", "2027-06-30"], ["AB3008", "Manômetro Baby", "000550/2026", "2026-02-03", "2027-02-26"], ["AB3015", "Tapete isolante classe 0 inteiriço", "51521", "2026-02-20", "2026-08-31"], ["AB3008", "Oxímetro de Pulso Adulto", "000323/2026", "2026-01-20", "2027-01-29"], ["AB3018", "Manômetro Esquerdo", "002264/2025", "2025-07-28", "2026-07-31"], ["AB3016", "Desencarcerador", "1018308", "2026-03-25", "2027-03-31"], ["AB3016", "Luva isolante cl0 tp2 esquerda", "52365", "2026-03-19", "2026-09-30"], ["AB3016", "Luva isolante cl0 tp2 direita", "52365", "2026-03-19", "2026-09-30"], ["AB3016", "Tapete isolante classe 0 inteiriço", "52367", "2026-03-19", "2026-09-30"], ["AB3018", "Oxímetro de Pulso Adulto", "002489/2025", "2025-08-08", "2026-08-31"], ["AB3018", "Desencarcerador", "1018308", "2026-03-25", "2027-03-31"], ["AB3009", "Esfigmomanômetro Adulto", "001356/2026", "2026-03-25", "2027-03-31"], ["AB3009", "Esfigmomanômetro Obeso", "001580/2026", "2026-04-29", "2027-04-30"], ["AB3009", "Esfigmomanômetro Infantil", "001574/2026", "2026-04-29", "2027-04-30"], ["AB3009", "Manômetro Direito", "001374/2026", "2026-03-25", "2027-03-31"], ["AB3009", "Manômetro Esquerdo", "001976/2026", "2026-06-09", "2027-06-30"], ["AB3009", "Manômetro Baby", "001375/2026", "2026-03-25", "2027-03-31"], ["AB3009", "Oxímetro de Pulso Adulto", "000338/2026", "2026-01-20", "2027-01-29"], ["AB3018", "Luva isolante cl0 tp2 esquerda", "52365", "2026-03-19", "2026-09-30"], ["AB3009", "Termômetro Clínico", "001946/2026", "2026-06-08", "2027-06-30"], ["AB3009", "Câmera Térmica", "001121/2026", "2026-03-11", "2027-03-31"], ["AB3018", "Luva isolante cl0 tp2 direita", "52365", "2026-03-19", "2026-09-30"], ["AB3018", "Tapete isolante classe 0 inteiriço", "52367", "2026-03-19", "2026-09-30"], ["AB3019", "Desencarcerador", "1018308", "2026-03-25", "2027-03-31"], ["AB3019", "Manômetro Direito", "002762/2025", "2025-09-11", "2026-09-30"], ["AB3019", "Luva isolante cl0 tp2 esquerda", "52365", "2026-03-19", "2026-09-30"], ["AB3011", "Câmera Térmica", "001838/2026", "2026-05-21", "2027-05-31"], ["AB3011", "Esfigmomanômetro Adulto", "003153/2025", "2025-12-11", "2026-12-31"], ["AB3011", "Esfigmomanômetro Obeso", "003155/2025", "2025-12-11", "2026-12-31"], ["AB3011", "Esfigmomanômetro Infantil", "003161/2025", "2025-12-11", "2026-12-31"], ["AB3011", "Manômetro Direito", "003178/2025", "2025-12-12", "2026-12-31"], ["AB3011", "Manômetro Esquerdo", "002962/2025", "2025-10-24", "2026-10-30"], ["AB3011", "Manômetro Baby", "002961/2025", "2025-10-24", "2026-10-30"], ["AB3011", "Oxímetro de Pulso Adulto", "003141/2025", "2025-12-11", "2026-12-31"], ["AB3011", "Termohigrômetro", "", "2026-06-08", "2027-06-30"], ["AB3011", "Termômetro Clínico", "003145/2025", "2025-12-11", "2026-12-31"], ["AB3019", "Luva isolante cl0 tp2 direita", "52365", "2026-03-19", "2026-09-30"], ["AB3019", "Tapete isolante classe 0 inteiriço", "52367", "2026-03-19", "2026-09-30"], ["AB3020", "Desencarcerador", "1018308", "2026-03-25", "2027-03-31"], ["AB3020", "Luva isolante cl0 tp2 esquerda", "52365", "2026-03-19", "2026-09-30"], ["AB3020", "Luva isolante cl0 tp2 direita", "52365", "2026-03-19", "2026-09-30"], ["AB3012", "Esfigmomanômetro Adulto", "002951/2025", "2025-10-24", "2026-10-30"], ["AB3012", "Esfigmomanômetro Obeso", "003160/2025", "2025-12-11", "2026-12-31"], ["AB3012", "Esfigmomanômetro Infantil", "001970/2026", "2026-06-09", "2027-06-30"], ["AB3018", "Termohigrômetro", "002084/2025", "2025-07-03", "2026-07-31"], ["AB3012", "Manômetro Esquerdo", "003177/2025", "2025-12-12", "2026-12-31"], ["AB3012", "Manômetro Baby", "003174/2025", "2025-12-12", "2026-12-31"], ["AB3020", "Tapete isolante classe 0 inteiriço", "52367", "2026-03-19", "2026-09-30"], ["AB3012", "Termohigrômetro", "001944/2026", "2026-06-08", "2027-06-30"], ["AB3012", "Termômetro Clínico", "003148/2025", "2025-12-11", "2026-12-31"], ["AB3012", "Câmera Térmica", "001129/2026", "2026-03-11", "2027-03-31"], ["AB3021", "Desencarcerador", "1018308", "2026-03-25", "2027-03-31"], ["AB3021", "Manômetro Direito", "002765/2025", "2025-09-11", "2026-09-30"], ["AB3021", "Oxímetro de Pulso Adulto", "002611/2025", "2025-08-29", "2026-08-31"], ["AB3021", "Luva isolante cl0 tp2 esquerda", "52365", "2026-03-19", "2026-09-30"], ["AB3021", "Luva isolante cl0 tp2 direita", "52365", "2026-03-19", "2026-09-30"], ["AB3030", "Câmera Térmica", "001831/2026", "2026-05-21", "2027-05-31"], ["AB3030", "Esfigmomanômetro Adulto", "002953/2025", "2025-10-24", "2026-10-30"], ["AB3030", "Esfigmomanômetro Obeso", "001359/2026", "2026-03-25", "2027-03-31"], ["AB3030", "Esfigmomanômetro Infantil", "001357/2026", "2026-03-25", "2027-03-31"], ["AB3030", "Manômetro Direito", "", "2026-06-09", "2027-06-30"], ["AB3030", "Manômetro Esquerdo", "001599/2026", "2026-04-28", "2027-04-30"], ["AB3018", "Termômetro Clínico", "002244/2025", "2025-07-28", "2026-07-31"], ["AB3030", "Oxímetro de Pulso Adulto", "003140/2025", "2025-12-11", "2026-12-31"], ["AB3021", "Tapete isolante classe 0 inteiriço", "52367", "2026-03-19", "2026-09-30"], ["AB3030", "Termômetro Clínico", "001583/2026", "2026-04-28", "2027-04-30"], ["AB3022", "Desencarcerador", "1018308", "2026-03-25", "2027-03-31"], ["AB3022", "Luva isolante cl0 tp2 esquerda", "52365", "2026-03-19", "2026-09-30"], ["AB3022", "Luva isolante cl0 tp2 direita", "52365", "2026-03-19", "2026-09-30"], ["AB3022", "Tapete isolante classe 0 inteiriço", "51520", "2026-02-20", "2026-08-31"], ["AB3023", "Desencarcerador", "1018308", "2026-03-25", "2027-03-31"], ["AB3031", "Esfigmomanômetro Adulto", "001957/2026", "2026-06-09", "2027-06-30"], ["AB3019", "Esfigmomanômetro Adulto", "002225/2025", "2025-07-28", "2026-07-31"], ["AB3031", "Esfigmomanômetro Obeso", "001965/2026", "2026-06-09", "2027-06-30"], ["AB3023", "Luva isolante cl0 tp2 esquerda", "52365", "2026-03-19", "2026-09-30"], ["AB3019", "Esfigmomanômetro Obeso", "002228/2025", "2025-07-28", "2026-07-31"], ["AB3019", "Termohigrômetro", "002154/2025", "2025-07-10", "2026-07-31"], ["AB3023", "Luva isolante cl0 tp2 direita", "52365", "2026-03-19", "2026-09-30"], ["AB3031", "Termohigrômetro", "001033/2026", "2026-03-03", "2027-03-31"], ["AB3020", "Esfigmomanômetro Adulto", "002227/2025", "2025-07-28", "2026-07-31"], ["AB3031", "Câmera Térmica", "001120/2026", "2026-03-11", "2027-03-31"], ["AB3023", "Tapete isolante classe 0 inteiriço", "52367", "2026-03-19", "2026-09-30"], ["AB3025", "Termohigrômetro", "002491/2025", "2025-08-08", "2026-08-31"], ["AB3025", "Desencarcerador", "1018308", "2026-03-25", "2027-03-31"], ["AB3025", "Luva isolante cl0 tp2 esquerda", "52365", "2026-03-19", "2026-09-30"], ["AB3025", "Luva isolante cl0 tp2 direita", "52365", "2026-03-19", "2026-09-30"], ["AB3032", "Esfigmomanômetro Adulto", "001364/2026", "2026-03-25", "2027-03-31"], ["AB3032", "Esfigmomanômetro Obeso", "001966/2026", "2026-06-09", "2027-06-30"], ["AB3020", "Termohigrômetro", "002155/2025", "2025-07-10", "2026-07-31"], ["AB3032", "Manômetro Direito", "001597/2026", "2026-04-28", "2027-04-30"], ["AB3032", "Manômetro Esquerdo", "001596/2026", "2026-04-28", "2027-04-30"], ["AB3032", "Manômetro Baby", "001595/2026", "2026-04-28", "2027-04-30"], ["AB3032", "Oxímetro de Pulso Adulto", "000321/2026", "2026-01-20", "2027-01-29"], ["AB3032", "Termohigrômetro", "001032/2026", "2026-03-03", "2027-03-31"], ["AB3021", "Esfigmomanômetro Adulto", "002229/2025", "2025-07-28", "2026-07-31"], ["AB3032", "Câmera Térmica", "001119/2026", "2026-03-11", "2027-03-31"], ["AB3025", "Tapete isolante classe 0 inteiriço", "51520", "2026-02-20", "2026-08-31"], ["AB3026", "Desencarcerador", "1018308", "2026-03-25", "2027-03-31"], ["AB3026", "Luva isolante cl0 tp2 esquerda", "52365", "2026-03-19", "2026-09-30"], ["AB3026", "Luva isolante cl0 tp2 direita", "52365", "2026-03-19", "2026-09-30"], ["AB3026", "Tapete isolante classe 0 inteiriço", "52367", "2026-03-19", "2026-09-30"], ["AB3013", "Esfigmomanômetro Obeso", "001352/2026", "2026-03-25", "2027-03-31"], ["AB3021", "Esfigmomanômetro Obeso", "002237/2025", "2025-07-28", "2026-07-31"], ["AB3013", "Esfigmomanômetro Infantil", "001964/2026", "2026-06-09", "2027-06-30"], ["AB3013", "Manômetro Direito", "002963/2025", "2025-10-24", "2026-10-30"], ["AB3013", "Manômetro Esquerdo", "003172/2025", "2025-12-12", "2026-12-31"], ["AB3013", "Manômetro Baby", "003175/2025", "2025-12-12", "2026-12-31"], ["AB3022", "Manômetro Direito", "002270/2025", "28/07/2025", "2026-07-31"], ["AB3022", "Oxímetro de Pulso Adulto", "002240/2025", "2025-07-28", "2026-07-31"], ["AB3013", "Termômetro Clínico", "001948/2026", "2026-06-08", "2027-06-30"], ["AB3013", "Câmera Térmica", "001126/2026", "2026-03-11", "2027-03-31"], ["AB3027", "Esfigmomanômetro Adulto", "002481/2025", "2025-08-08", "2026-08-31"], ["AB3027", "Esfigmomanômetro Obeso", "002480/2025", "2025-08-08", "2026-08-31"], ["AB3027", "Termohigrômetro", "002495/2025", "2025-08-08", "2026-08-31"], ["AB3027", "Desencarcerador", "1018308", "2026-03-25", "2027-03-31"], ["AB3027", "Oxímetro de Pulso Adulto", "002614/2025", "2025-08-29", "2026-08-31"], ["AB3014", "Câmera Térmica", "001835/2026", "2026-05-21", "2027-05-31"], ["AB3014", "Esfigmomanômetro Obeso", "003162/2025", "2025-12-11", "2026-12-31"], ["AB3014", "Esfigmomanômetro Infantil", "003154/2025", "2025-12-11", "2026-12-31"], ["AB3022", "Termohigrômetro", "002257/2025", "2025-07-28", "2026-07-31"], ["AB3014", "Manômetro Direito", "003170/2025", "2025-12-12", "2026-12-31"], ["AB3014", "Manômetro Esquerdo", "003179/2025", "2025-12-12", "2026-12-31"], ["AB3014", "Manômetro Baby", "000542/2026", "2026-02-03", "2027-02-26"], ["AB3023", "Manômetro Direito", "002269/2025", "28/07/2025", "2026-07-31"], ["AB3023", "Manômetro Esquerdo", "002274/2025", "2025-07-28", "2026-07-31"], ["AB3014", "Termômetro Clínico", "001377/2026", "2026-03-25", "2027-03-31"], ["AB3027", "Luva isolante cl0 tp2 esquerda", "52365", "2026-03-19", "2026-09-30"], ["AB3027", "Luva isolante cl0 tp2 direita", "52365", "2026-03-19", "2026-09-30"], ["AB3027", "Tapete isolante classe 0 inteiriço", "52367", "2026-03-19", "2026-09-30"], ["AB3028", "Desencarcerador", "1018308", "2026-03-25", "2027-03-31"], ["AB3028", "Luva isolante cl0 tp2 esquerda", "52365", "2026-03-19", "2026-09-30"], ["AB3015", "Câmera Térmica", "001841/2026", "2026-05-21", "2027-05-31"], ["AB3015", "Esfigmomanômetro Obeso", "001581/2026", "2026-04-29", "2027-04-30"], ["AB3015", "Esfigmomanômetro Infantil", "001971/2026", "2026-06-09", "2027-06-30"], ["AB3023", "Oxímetro de Pulso Adulto", "002241/2025", "2025-07-28", "2026-07-31"], ["AB3015", "Manômetro Direito", "003173/2025", "2025-12-12", "2026-12-31"], ["AB3015", "Manômetro Esquerdo", "003166/2025", "2025-12-12", "2026-12-31"], ["AB3015", "Manômetro Baby", "003167/2025", "2025-12-11", "2026-12-31"], ["AB3015", "Oxímetro de Pulso Adulto", "003142/2025", "2025-12-11", "2026-12-31"], ["AB3023", "Termômetro Clínico", "002253/2025", "2026-07-28", "2027-07-30"], ["AB3015", "Termômetro Clínico", "001945/2026", "2026-06-08", "2027-06-30"], ["AB3028", "Luva isolante cl0 tp2 direita", "52365", "2026-03-19", "2026-09-30"], ["AB3028", "Tapete isolante classe 0 inteiriço", "52367", "2026-03-19", "2026-09-30"], ["AB3029", "Desencarcerador", "1018308", "2026-03-25", "2027-03-31"], ["AB3029", "Luva isolante cl0 tp2 esquerda", "52365", "2026-03-19", "2026-09-30"], ["AB3029", "Luva isolante cl0 tp2 direita", "52365", "2026-03-19", "2026-09-30"], ["AB3028", "Câmera Térmica", "001441/2026", "2026-03-31", "2027-03-31"], ["AB3028", "Esfigmomanômetro Adulto", "001355/2026", "2026-03-25", "2027-03-31"], ["AB3028", "Esfigmomanômetro Obeso", "001358/2026", "2026-03-25", "2027-03-31"], ["AB3028", "Esfigmomanômetro Infantil", "001575/2026", "2026-04-29", "2027-04-30"], ["AB3028", "Manômetro Direito", "002956/2025", "2025-10-24", "2026-10-30"], ["AB3028", "Manômetro Esquerdo", "002957/2025", "2025-10-24", "2026-10-30"], ["AB3028", "Manômetro Baby", "002958/2025", "2025-10-24", "2026-10-30"], ["AB3028", "Oxímetro de Pulso Adulto", "003139/2025", "2025-12-11", "2026-12-31"], ["AB3028", "Termohigrômetro", "", "2026-06-08", "2027-06-30"], ["AB3028", "Termômetro Clínico", "001378/2026", "2026-03-25", "2027-03-31"], ["AB3029", "Tapete isolante classe 0 inteiriço", "52367", "2026-03-19", "2026-09-30"], ["AB3030", "Luva isolante cl0 tp2 esquerda", "52365", "2026-03-19", "2026-09-30"], ["AB3030", "Luva isolante cl0 tp2 direita", "52365", "2026-03-19", "2026-09-30"], ["AB3030", "Tapete isolante classe 0 inteiriço", "52367", "2026-03-19", "2026-09-30"], ["AB3030", "Desencarcerador", "1018308", "2026-03-25", "2027-03-31"], ["AB3029", "Esfigmomanômetro Adulto", "001577/2026", "2026-04-29", "2027-04-30"], ["AB3029", "Esfigmomanômetro Obeso", "001354/2026", "2026-03-25", "2027-03-31"], ["AB3029", "Esfigmomanômetro Infantil", "001579/2026", "2026-04-29", "2027-04-30"], ["AB3029", "Manômetro Direito", "002959/2025", "2025-10-24", "2026-10-30"], ["AB3025", "Esfigmomanômetro Adulto", "002226/2025", "2025-07-28", "2026-07-31"], ["AB3029", "Manômetro Esquerdo", "003171/2025", "2025-12-12", "2026-12-31"], ["AB3029", "Oxímetro de Pulso Adulto", "003143/2025", "2025-12-11", "2026-12-31"], ["AB3029", "Termohigrômetro", "", "2026-06-08", "2027-06-30"], ["AB3029", "Termômetro Clínico", "003147/2025", "2025-12-11", "2026-12-31"], ["AB3029", "Câmera Térmica", "001125/2026", "2026-03-11", "2027-03-31"], ["AB3030", "Termohigrômetro", "002615/2025", "2025-08-29", "2026-08-31"], ["AB3031", "Luva isolante cl0 tp2 esquerda", "52365", "2026-03-19", "2026-09-30"], ["AB3031", "Luva isolante cl0 tp2 direita", "52365", "2026-03-19", "2026-09-30"], ["AB3031", "Tapete isolante classe 0 inteiriço", "52367", "2026-03-19", "2026-09-30"], ["AB3031", "Desencarcerador", "1018308", "2026-03-25", "2027-03-31"], ["AB3016", "Câmera Térmica", "001840/2026", "2026-05-21", "2027-05-31"], ["AB3016", "Esfigmomanômetro Obeso", "001573/2026", "2026-04-29", "2027-04-30"], ["AB3016", "Esfigmomanômetro Infantil", "001578/2026", "2026-04-29", "2027-04-30"], ["AB3031", "Manômetro Direito", "002764/2025", "2025-09-11", "2026-09-30"], ["AB3016", "Manômetro Direito", "002965/2025", "2025-10-24", "2026-10-30"], ["AB3016", "Manômetro Esquerdo", "000546/2026", "2026-02-03", "2027-02-26"], ["AB3016", "Manômetro Baby", "002960/2025", "2025-10-24", "2026-10-30"], ["AB3016", "Oxímetro de Pulso Adulto", "000336/2026", "2026-01-20", "2027-01-29"], ["AB3026", "Esfigmomanômetro Adulto", "002224/2025", "2025-07-28", "2026-07-31"], ["AB3016", "Termômetro Clínico", "003146/2025", "2025-12-11", "2026-12-31"], ["AB3031", "Oxímetro de Pulso Adulto", "002610/2025", "2025-08-29", "2026-08-31"], ["AB3031", "Esfigmomanômetro Infantil", "002483/2025", "2025-08-08", "2026-08-31"], ["AB3032", "Luva isolante cl0 tp2 esquerda", "52365", "2026-03-19", "2026-09-30"], ["AB3032", "Luva isolante cl0 tp2 direita", "52365", "2026-03-19", "2026-09-30"], ["AB3032", "Tapete isolante classe 0 inteiriço", "52367", "2026-03-19", "2026-09-30"], ["AB3026", "Manômetro Direito", "002273/2025", "2025-07-28", "2026-07-31"], ["AB3018", "Esfigmomanômetro Infantil", "003181/2025", "2025-12-11", "2026-12-31"], ["AB3032", "Desencarcerador", "1018308", "2026-03-25", "2027-03-31"], ["AB3018", "Manômetro Baby", "001594/2026", "2026-04-28", "2027-04-30"], ["AB3027", "Esfigmomanômetro Infantil", "002232/2025", "2025-07-28", "2026-07-31"], ["RESERVA", "Esfigmomanômetro Adulto", "", "2025-08-08", "2026-08-31"], ["AB3027", "Manômetro Direito", "002267/2025", "2025-07-28", "2026-07-31"], ["RESERVA", "Esfigmomanômetro Obeso", "", "2025-08-08", "2026-08-31"], ["AB3029", "Manômetro Baby", "002263/2025", "2025-07-28", "2026-07-31"], ["AB3018", "Câmera Térmica", "001128/2026", "2026-03-11", "2027-03-31"], ["RESERVA", "Esfigmomanômetro Infantil", "", "2025-08-08", "2026-08-31"], ["RESERVA", "Termohigrômetro", "", "2025-08-08", "2026-08-31"], ["RESERVA", "Oxímetro de Pulso Adulto", "", "2025-08-08", "2026-08-31"], ["RESERVA", "Termohigrômetro", "", "2025-08-08", "2026-08-31"], ["RESERVA", "Termohigrômetro", "", "2025-08-08", "2026-08-31"], ["AB3019", "Câmera Térmica", "001842/2026", "2026-05-21", "2027-05-31"], ["AB3030", "Manômetro Baby", "002260/2025", "2025-07-28", "2026-07-31"], ["RESERVA", "Termohigrômetro", "", "2025-08-08", "2026-08-31"], ["AB3019", "Esfigmomanômetro Infantil", "001714/2026", "2026-05-11", "2027-05-31"], ["AB3019", "Manômetro Esquerdo", "001977/2026", "2026-06-09", "2027-06-30"], ["AB3019", "Manômetro Baby", "001983/2026", "2026-06-09", "2027-06-30"], ["RESERVA", "Termohigrômetro", "", "2025-08-08", "2026-08-31"], ["AB3019", "Oxímetro de Pulso Adulto", "000348/2026", "2026-01-20", "2027-01-29"], ["AB3031", "Manômetro Esquerdo", "002268/2025", "2025-07-28", "2026-07-31"], ["AB3019", "Termômetro Clínico", "001383/2026", "2026-03-25", "2027-03-31"], ["RESERVA", "Termohigrômetro", "", "2025-08-08", "2026-08-31"], ["RESERVA", "Termohigrômetro", "", "2025-08-08", "2026-08-31"], ["RESERVA", "Manômetro Direito", "", "2025-08-08", "2026-08-31"], ["RESERVA", "Esfigmomanômetro", "", "2025-08-08", "2026-08-31"], ["RESERVA", "Valvula de pressao", "", "2025-09-11", "2026-09-30"], ["AB3020", "Esfigmomanômetro Obeso", "001360/2026", "2026-03-25", "2027-03-31"], ["AB3020", "Esfigmomanômetro Infantil", "001953/2026", "2026-06-09", "2027-06-30"], ["AB3031", "Manômetro Baby", "002266/2025", "2025-07-28", "2026-07-31"], ["AB3020", "Manômetro Direito", "001601/2026", "2026-04-28", "2027-04-30"], ["AB3020", "Manômetro Esquerdo", "001982/2026", "2026-06-09", "2027-06-30"], ["AB3020", "Manômetro Baby", "001984/2026", "2026-06-09", "2027-06-30"], ["AB3020", "Oxímetro de Pulso Adulto", "000325/2026", "2026-01-20", "2027-01-29"], ["AB3031", "Termômetro Clínico", "002252/2025", "2025-07-28", "2026-07-31"], ["AB3020", "Termômetro Clínico", "001384/2026", "2026-03-25", "2027-03-31"], ["AB3020", "Câmera Térmica", "001127/2026", "2026-03-11", "2027-03-31"], ["RESERVA", "Termohigrômetro", "", "2025-08-29", "2026-08-31"], ["RESERVA", "Termohigrômetro", "", "2025-08-29", "2026-08-31"], ["USA3001", "Luva isolante cl0 tp2 esquerda", "52365", "2026-03-19", "2026-09-30"], ["USA3001", "Luva isolante cl0 tp2 direita", "52365", "2026-03-19", "2026-09-30"], ["USA3001", "Tapete isolante classe 0 inteiriço", "52367", "2026-03-19", "2026-09-30"], ["AB3021", "Câmera Térmica", "001836/2026", "2026-05-21", "2027-05-31"], ["AB3032", "Esfigmomanômetro Infantil", "002223/2025", "2025-07-28", "2026-07-31"], ["AB3032", "Termômetro Clínico", "002251/2025", "2025-07-28", "2026-07-31"], ["AB3021", "Esfigmomanômetro Infantil", "001353/2026", "2026-03-25", "2027-03-31"], ["AB3021", "Manômetro Esquerdo", "001978/2026", "2026-06-09", "2027-06-30"], ["AB3021", "Manômetro Baby", "001972/2026", "2026-06-09", "2027-06-30"], ["USA3001", "Respirador Portátil 2000", "002761/2025", "2025-09-11", "2026-09-30"], ["USA3002", "Luva isolante cl0 tp2 esquerda", "52365", "2026-03-19", "2026-09-30"], ["AB3021", "Termohigrômetro", "001938/2026", "2026-06-08", "2027-06-30"], ["AB3021", "Termômetro Clínico", "001380/2026", "2026-03-25", "2027-03-31"], ["USA3002", "Luva isolante cl0 tp2 direita", "52365", "2026-03-19", "2026-09-30"], ["USA3002", "Tapete isolante classe 0 inteiriço", "52367", "2026-03-19", "2026-09-30"], ["USA3002", "Oxímetro de Pulso Adulto", "002612/2025", "2025-08-29", "2026-08-31"], ["USA3002", "Ventilador de Bancada 4000", "", "", ""], ["USA3002", "Respirador Portátil 2000", "002507/2025", "2025-08-13", "2026-08-31"], ["AB3022", "Esfigmomanômetro Adulto", "001362/2026", "2026-03-25", "2027-03-31"], ["AB3022", "Esfigmomanômetro Obeso", "001361/2026", "2026-03-25", "2027-03-31"], ["AB3022", "Esfigmomanômetro Infantil", "001956/2026", "2026-06-09", "2027-06-30"], ["AB3022", "Manômetro Esquerdo", "000551/2026", "2026-02-03", "2027-02-26"], ["RESERVA", "Manômetro Esquerdo", "", "2025-07-28", "2026-07-31"], ["AB3022", "Manômetro Baby", "000541/2026", "2026-02-03", "2027-02-26"], ["USA3003", "Luva isolante cl0 tp2 esquerda", "52365", "2026-03-19", "2026-09-30"], ["RESERVA", "Esfigmomanômetro", "", "2025-07-30", "2026-07-31"], ["AB3022", "Termômetro Clínico", "001949/2026", "2026-06-08", "2027-06-30"], ["AB3022", "Câmera Térmica", "001118/2026", "2026-03-11", "2027-03-31"], ["USA3003", "Luva isolante cl0 tp2 direita", "52365", "2026-03-19", "2026-09-30"], ["USA3003", "Tapete isolante classe 0 inteiriço", "52367", "2026-03-19", "2026-09-30"], ["USA3003", "Valvula de pressao", "002760/2025", "2025-09-11", "2026-09-30"], ["USA3003", "Cardioversor", "002801/2025", "2025-09-29", "2026-09-30"], ["USA3003", "Respirador Portátil 2000", "002791/2025", "2025-09-19", "2026-09-30"], ["AB3023", "Câmera Térmica", "001833/2026", "2026-05-21", "2027-05-31"], ["AB3023", "Esfigmomanômetro Adulto", "001363/2026", "2026-03-25", "2027-03-31"], ["AB3023", "Esfigmomanômetro Obeso", "001365/2026", "2026-03-25", "2027-03-31"], ["AB3023", "Esfigmomanômetro Infantil", "003159/2025", "2025-12-11", "2026-12-31"], ["AB3023", "Manômetro Baby", "000538/2026", "2026-02-03", "2027-02-26"], ["USA3004", "Luva isolante cl0 tp2 esquerda", "52365", "2026-03-19", "2026-09-30"], ["USA3004", "Luva isolante cl0 tp2 direita", "52365", "2026-03-19", "2026-09-30"], ["RESERVA", "Termohigrômetro", "", "2025-07-28", "2026-07-31"], ["AB3023", "Termohigrômetro", "003144/2025", "2025-12-11", "2026-12-31"], ["USA3004", "Tapete isolante classe 0 inteiriço", "52367", "2026-03-19", "2026-09-30"], ["USA3004", "Ventilador de Bancada 4000", "002506/2025", "2025-08-13", "2026-08-31"], ["AB3025", "Câmera Térmica", "001832/2026", "2026-05-21", "2027-05-31"], ["RESERVA", "Termohigrômetro", "", "2025-07-28", "2026-07-31"], ["AB3025", "Esfigmomanômetro Obeso", "001963/2026", "2026-06-09", "2027-06-30"], ["AB3025", "Esfigmomanômetro Infantil", "001968/2026", "2026-06-09", "2027-06-30"], ["AB3025", "Manômetro Direito", "001985/2026", "2026-06-09", "2027-06-30"], ["AB3025", "Manômetro Esquerdo", "001373/2026", "2026-03-25", "2027-03-31"], ["AB3025", "Manômetro Baby", "001593/2026", "2026-04-28", "2027-04-30"], ["AB3025", "Oxímetro de Pulso Adulto", "000335/2026", "2026-01-20", "2027-01-29"], ["RESERVA", "Termohigrômetro", "", "2025-07-28", "2026-07-31"], ["AB3025", "Termômetro Clínico", "001381/2026", "2026-03-25", "2027-03-31"], ["AB3026", "Esfigmomanômetro Obeso", "003150/2025", "2025-12-11", "2026-12-31"], ["AB3026", "Esfigmomanômetro Infantil", "003158/2025", "2025-12-11", "2026-12-31"], ["RESERVA", "Termohigrômetro", "", "2025-07-28", "2026-07-31"], ["RESERVA", "Termômetro Clínico", "", "2025-07-28", "2026-07-31"], ["AB3026", "Manômetro Esquerdo", "000545/2026", "2026-02-03", "2027-02-26"], ["AB3026", "Manômetro Baby", "001367/2026", "2026-03-25", "2027-03-31"], ["AB3026", "Oxímetro de Pulso Adulto", "000332/2026", "2026-01-20", "2027-01-29"], ["AB3026", "Termohigrômetro", "001942/2026", "2026-06-08", "2027-06-30"], ["AB3026", "Termômetro Clínico", "001586/2026", "2026-04-28", "2027-04-30"], ["AB3026", "Câmera Térmica", "001117/2026", "2026-03-11", "2027-03-31"], ["AB3027", "Câmera Térmica", "001834/2026", "2026-05-21", "2027-05-31"], ["RESERVA", "Termômetro Clínico", "", "2025-07-28", "2026-07-31"], ["RESERVA", "Termômetro Clínico", "", "2025-07-28", "2026-07-31"], ["RESERVA", "Termômetro Clínico", "", "2025-07-28", "2026-07-31"], ["AB3027", "Manômetro Esquerdo", "000543/2026", "2026-02-03", "2027-02-26"], ["AB3027", "Manômetro Baby", "000544/2026", "2026-02-03", "2027-02-26"], ["RESERVA", "Termômetro Clínico", "", "2025-07-28", "2026-07-31"], ["RESERVA", "Termômetro Clínico", "", "2025-07-28", "2026-07-31"], ["AB3027", "Termômetro Clínico", "001376/2026", "2026-03-25", "2027-03-31"], ["AB3042R", "Manômetro Direito", "003163/2025", "2025-12-11", "2026-12-31"], ["AB3042R", "Manômetro Esquerdo", "001371/2026", "2026-03-25", "2027-03-31"], ["RESERVA", "Termômetro Clínico", "", "2025-07-28", "2026-07-31"], ["RESERVA", "Termômetro Clínico", "", "2025-07-28", "2026-07-31"], ["RESERVA", "Termômetro Clínico", "", "2025-07-28", "2026-07-31"], ["RESERVA", "Termômetro Clínico", "", "2025-07-28", "2026-07-31"], ["RESERVA", "Termômetro Clínico", "", "2025-07-28", "2026-07-31"], ["USA3001", "Oxímetro de Pulso Adulto", "002078/2025", "2025-07-03", "2026-07-31"], ["USA3001", "Termômetro Clínico", "002246/2025", "2025-07-28", "2026-07-31"], ["USA3001", "Ventilador de Bancada 4000", "002185/2025", "2025-07-23", "2026-07-31"], ["USA3002", "Esfigmomanômetro Infantil", "002101/2025", "2025-07-07", "2026-07-31"], ["USA3002", "Termohigrômetro", "002080/2025", "2025-07-03", "2026-07-31"], ["USA3002", "Termômetro Clínico", "002248/2025", "2025-07-28", "2026-07-31"], ["USA3003", "Termohigrômetro", "002083/2025", "2025-07-03", "2026-07-31"], ["USA3003", "Termômetro Clínico", "002250/2025", "2025-07-28", "2026-07-31"], ["USA3003", "Ventilador de Bancada 4000", "002186/2025", "2025-07-23", "2026-07-31"], ["USA3004", "Esfigmomanômetro Infantil", "002328/2025", "2025-07-30", "2026-07-31"], ["USA3004", "Valvula de pressao", "002242/2025", "2025-07-28", "2026-07-31"], ["USA3004", "Cardioversor", "002157/2025", "2025-07-11", "2026-07-31"], ["USA3004", "Respirador Portátil 2000", "002079/2025", "2025-07-03", "2026-07-31"], ["RESERVA", "Cardioversor", "003138/2025", "2025-12-12", "2026-12-31"]];
+
+const EIXO_REAL_COMPLETO = [["AB3001", "Termohigrômetro", "ITIRAPINA", "INCOTERM", "S/N", "002490/2025", "2025-08-08", "2026-08-31", "±2ºC  - Temp. | ±10%UR – Umidade", "SIM", "TIEI0046"], ["AB3001", "Desencarcerador", "ITIRAPINA", "LUBRAX", "ESSENCIAL SL", "1018308", "2026-03-25", "2027-03-31", "NA", "SIM", "NÃO APLICAVEL"], ["AB3001", "Luva isolante cl0 tp2 esquerda", "ITIRAPINA", "ORION", "25012923", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["USA3001", "Esfigmomanômetro Adulto", "RIO CLARO", "PREMIUM", "7864088", "001958/2026", "2026-06-09", "2027-06-30", "± 4 mmHg", "SIM", "PIEI0068"], ["USA3001", "Esfigmomanômetro Obeso", "RIO CLARO", "PREMIUM", "5844512", "001961/2026", "2026-06-09", "2027-06-30", "± 4 mmHg", "SIM", "PIEI0068"], ["USA3001", "Esfigmomanômetro Infantil", "RIO CLARO", "PREMIUM", "7807612", "001962/2026", "2026-06-09", "2027-06-30", "± 4 mmHg", "SIM", "PIEI0068"], ["USA3001", "Manômetro Direito", "RIO CLARO", "PROTEC", "S/N", "001602/2026", "2026-04-28", "2027-04-30", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["USA3001", "Manômetro Esquerdo", "RIO CLARO", "PROTEC", "S/N", "001979/2026", "2026-06-09", "2027-06-30", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["USA3001", "Manômetro Baby", "RIO CLARO", "PROTEC", "S/N", "001975/2026", "2026-06-09", "2027-06-30", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["USA3001", "Valvula de pressao", "RIO CLARO", "PROTEC", "S/N", "001718/2026", "2026-05-11", "2027-05-31", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3001", "Esfigmomanômetro Adulto", "ITIRAPINA", "PREMIUM", "7863693", "002072/2025", "2025-07-03", "2026-07-31", "± 4 mmHg", "SIM", "PIEI0068"], ["USA3001", "Termohigrômetro", "RIO CLARO", "INCOTERM", "163277", "001034/2026", "2026-03-03", "2027-03-31", "±2ºC  - Temp. | ±10%UR – Umidade", "SIM", "TIEI0209"], ["AB3001", "Esfigmomanômetro Obeso", "ITIRAPINA", "PREMIUM", "8380517", "002151/2025", "2025-07-10", "2026-07-31", "± 4 mmHg", "SIM", "PIEI0068"], ["USA3001", "Câmera Térmica", "RIO CLARO", "HIKMICRO", "EA4365001", "001003/2026", "2026-02-26", "2027-02-26", "+ 2/ -2 °C", "SIM", "TIEI0254"], ["USA3001", "Cardioversor", "RIO CLARO", "NIHON KOHDEN", "13056", "000945/2026", "2026-02-23", "2027-02-26", "± 3 J ou 15% | ± 5 BPM ou 10%", "SIM", "EIEI0083"], ["AB3001", "Esfigmomanômetro Infantil", "ITIRAPINA", "PREMIUM", "8775778", "002153/2025", "2025-07-10", "2026-07-31", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3001", "Luva isolante cl0 tp2 direita", "ITIRAPINA", "ORION", "25012916", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3001", "Tapete isolante classe 0 inteiriço", "ITIRAPINA", "BFLEX", "S/N", "52367", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3003", "Desencarcerador", "CORDEIRÓPOLIS", "LUBRAX", "ESSENCIAL SL", "1018308", "2026-03-25", "2027-03-31", "NA", "SIM", "NÃO APLICAVEL"], ["AB3003", "Luva isolante cl0 tp2 esquerda", "CORDEIRÓPOLIS", "ORION", "25012907", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3003", "Luva isolante cl0 tp2 direita", "CORDEIRÓPOLIS", "ORION", "25012932", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3003", "Tapete isolante classe 0 inteiriço", "CORDEIRÓPOLIS", "BFLEX", "S/N", "52367", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["USA3002", "Esfigmomanômetro Adulto", "JAÚ", "PREMIUM", "5851131", "001960/2026", "2026-06-09", "2027-06-30", "± 4 mmHg", "SIM", "PIEI0068"], ["USA3002", "Esfigmomanômetro Obeso", "JAÚ", "PREMIUM", "6347451", "001366/2026", "2026-03-25", "2027-03-31", "± 4 mmHg", "SIM", "PIEI0068"], ["USA3002", "Manômetro Direito", "JAÚ", "PROTEC", "S/N", "001370/2026", "2026-03-25", "2027-03-31", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["USA3002", "Manômetro Esquerdo", "JAÚ", "PROTEC", "S/N", "001372/2026", "2026-03-25", "2027-03-31", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["USA3002", "Manômetro Baby", "JAÚ", "PROTEC", "S/N", "001368/2026", "2026-03-25", "2027-03-31", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["USA3002", "Valvula de pressao", "JAÚ", "PROTEC", "S/N", "002955/2025", "2025-10-24", "2026-10-30", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3004", "Desencarcerador", "IPEÚNA", "LUBRAX", "ESSENCIAL SL", "1018308", "2026-03-25", "2027-03-31", "NA", "SIM", "NÃO APLICAVEL"], ["AB3001", "Termômetro Clínico", "ITIRAPINA", "G-TECH", "S/N", "002245/2025", "2025-07-28", "2026-07-31", "± 0,2ºC", "SIM", "TIEI0279"], ["AB3003", "Manômetro Direito", "CORDEIRÓPOLIS", "PROTEC", "S/N", "002265/2025", "2025-07-28", "2026-07-31", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["USA3002", "Câmera Térmica", "JAÚ", "HIKMICRO", "EA4365094", "001130/2026", "2026-03-11", "2027-03-31", "+ 2/ -2 °C", "SIM", "TIEI0254"], ["USA3002", "Cardioversor", "JAÚ", "NIHON KOHDEN", "02154", "003138/2025", "2025-12-12", "2026-12-31", "± 3 J ou 15% | ± 5 BPM ou 10%", "SIM", "EIEI0083"], ["AB3003", "Manômetro Esquerdo", "CORDEIRÓPOLIS", "PROTEC", "S/N", "002272/2025", "2025-07-25", "2026-07-31", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3003", "Manômetro Baby", "CORDEIRÓPOLIS", "PROTEC", "S/N", "002261/2025", "2025-07-28", "2026-07-31", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3004", "Luva isolante cl0 tp2 esquerda", "IPEÚNA", "ORION", "25012937", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3004", "Luva isolante cl0 tp2 direita", "IPEÚNA", "ORION", "25012924", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3004", "Tapete isolante classe 0 inteiriço", "IPEÚNA", "BFLEX", "S/N", "52367", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3005", "Esfigmomanômetro Adulto", "PIRACICABA", "PREMIUM", "5839142", "002478/2025", "2025-08-08", "2026-08-31", "± 4 mmHg", "SIM", "PIEI0068"], ["USA3003", "Esfigmomanômetro Adulto", "HERCULÂNDIA", "PREMIUM", "6353877", "003149/2025", "2025-12-11", "2026-12-31", "± 4 mmHg", "SIM", "PIEI0068"], ["USA3003", "Esfigmomanômetro Obeso", "HERCULÂNDIA", "SOLIDOR", "G 953000", "001711/2026", "2026-05-11", "2027-05-31", "± 4 mmHg", "SIM", "PIEI0068"], ["USA3003", "Esfigmomanômetro Infantil", "HERCULÂNDIA", "SOLIDOR", "E 95743", "001717/2026", "2026-05-11", "2027-05-31", "± 4 mmHg", "SIM", "PIEI0068"], ["USA3003", "Manômetro Direito", "HERCULÂNDIA", "PROTEC", "S/N", "003176/2025", "2025-12-12", "2026-12-31", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["USA3003", "Manômetro Esquerdo", "HERCULÂNDIA", "PROTEC", "S/N", "003169/2025", "2025-12-12", "2026-12-31", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["USA3003", "Manômetro Baby", "HERCULÂNDIA", "PROTEC", "S/N", "003165/2025", "2025-12-11", "2026-12-31", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3005", "Termohigrômetro", "PIRACICABA", "INCOTERM", "S/N", "002494/2025", "2025-08-08", "2026-08-31", "±2ºC  - Temp. | ±10%UR – Umidade", "SIM", "TIEI0046"], ["USA3003", "Oxímetro de Pulso Adulto", "HERCULÂNDIA", "Mediclini", "241202408901", "000331/2026", "2026-01-20", "2027-01-29", "± 2% SpO2 |± 2 BPM", "SIM", "EIEI0102"], ["AB3003", "Oxímetro de Pulso Adulto", "CORDEIRÓPOLIS", "G-TECH", "223547620467", "002076/2025", "2025-07-03", "2026-07-31", "± 2% SpO2 |± 2 BPM", "SIM", "EIEI0102"], ["AB3004", "Esfigmomanômetro Adulto", "IPEÚNA", "PREMIUM", "7303141", "002075/2025", "2025-07-03", "2026-07-31", "± 4 mmHg", "SIM", "PIEI0068"], ["USA3003", "Câmera Térmica", "HERCULÂNDIA", "HIKMICRO", "EA4365084", "001123/2026", "2026-03-11", "2027-03-31", "+ 2/ -2 °C", "SIM", "TIEI0254"], ["AB3005", "Desencarcerador", "PIRACICABA", "LUBRAX", "ESSENCIAL SL", "1018308", "2026-03-25", "2027-03-31", "NA", "SIM", "NÃO APLICAVEL"], ["AB3004", "Esfigmomanômetro Obeso", "IPEÚNA", "PREMIUM", "7371311", "002073/2025", "2025-07-03", "2026-07-31", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3005", "Luva isolante cl0 tp2 esquerda", "PIRACICABA", "ORION", "25012935", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3005", "Luva isolante cl0 tp2 direita", "PIRACICABA", "ORION", "25048764", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3005", "Tapete isolante classe 0 inteiriço", "PIRACICABA", "BFLEX", "S/N", "52367", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3007", "Termohigrômetro", "SÃO PEDRO", "INCOTERM", "S/N", "002496/2025", "2025-08-08", "2026-08-31", "±2ºC  - Temp. | ±10%UR – Umidade", "SIM", "TIEI0046"], ["AB3007", "Desencarcerador", "SÃO PEDRO", "LUBRAX", "ESSENCIAL SL", "1018308", "2026-03-25", "2027-03-31", "NA", "SIM", "NÃO APLICAVEL"], ["AB3004", "Manômetro Direito", "IPEÚNA", "PROTEC", "S/N", "002271/2025", "2025-07-28", "2026-07-31", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["USA3004", "Esfigmomanômetro Adulto", "REGENTE FEIJÓ", "P.A. MED", "774573", "002954/2025", "2025-10-24", "2026-10-30", "± 4 mmHg", "SIM", "PIEI0068"], ["USA3004", "Esfigmomanômetro Obeso", "REGENTE FEIJÓ", "PREMIUM", "7387945", "002952/2025", "2025-10-24", "2026-10-30", "± 4 mmHg", "SIM", "PIEI0068"], ["USA3004", "Manômetro Direito", "REGENTE FEIJÓ", "PROTEC", "S/N", "001592/2026", "2026-04-28", "2027-04-30", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["USA3004", "Manômetro Esquerdo", "REGENTE FEIJÓ", "PROTEC", "S/N", "001591/2026", "2026-04-28", "2027-04-30", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["USA3004", "Manômetro Baby", "REGENTE FEIJÓ", "PROTEC", "S/N", "001369/2026", "2026-03-25", "2027-03-31", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3005", "Esfigmomanômetro Obeso", "PIRACICABA", "PREMIUM", "6347341", "002074/2025", "2025-07-03", "2026-07-31", "± 4 mmHg", "SIM", "PIEI0068"], ["USA3004", "Oxímetro de Pulso Adulto", "REGENTE FEIJÓ", "Mediclini", "241202408912", "000345/2026", "2026-01-20", "2027-01-29", "± 2% SpO2 |± 2 BPM", "SIM", "EIEI0102"], ["USA3004", "Termohigrômetro", "REGENTE FEIJÓ", "INCOTERM", "S/N", "001588/2026", "2026-04-28", "2027-04-30", "±2ºC  - Temp. | ±10%UR – Umidade", "SIM", "TIEI0209"], ["USA3004", "Termômetro Clínico", "REGENTE FEIJÓ", "G-TECH", "S/N", "001951/2026", "2026-06-08", "2027-06-30", "± 0,2ºC", "SIM", "TIEI0279"], ["USA3004", "Câmera Térmica", "REGENTE FEIJÓ", "HIKMICRO", "EA4365032", "001124/2026", "2026-03-11", "2027-03-31", "+ 2/ -2 °C", "SIM", "TIEI0254"], ["AB3007", "Luva isolante cl0 tp2 esquerda", "SÃO PEDRO", "ORION", "25048739", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3005", "Manômetro Direito", "PIRACICABA", "PROTEC", "S/N", "002262/2025", "2025-07-25", "2026-07-31", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3007", "Luva isolante cl0 tp2 direita", "SÃO PEDRO", "ORION", "25012936", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3007", "Tapete isolante classe 0 inteiriço", "SÃO PEDRO", "BFLEX", "S/N", "52367", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3008", "Desencarcerador", "TORRINHA", "LUBRAX", "ESSENCIAL SL", "1018308", "2026-03-25", "2027-03-31", "NA", "SIM", "NÃO APLICAVEL"], ["AB3008", "Manômetro Direito", "TORRINHA", "PROTEC", "S/N", "002763/2025", "2025-09-11", "2026-09-30", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3008", "Luva isolante cl0 tp2 esquerda", "TORRINHA", "ORION", "25048763", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3008", "Luva isolante cl0 tp2 direita", "TORRINHA", "ORION", "25012906", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3001", "Câmera Térmica", "ITIRAPINA", "HIKMICRO", "EA4365003", "001002/2026", "2026-02-26", "2027-02-26", "+ 2/ -2 °C", "SIM", "TIEI0254"], ["AB3008", "Tapete isolante classe 0 inteiriço", "TORRINHA", "BFLEX", "S/N", "51521", "2026-02-20", "2026-08-31", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3008", "Termohigrômetro", "TORRINHA", "INCOTERM", "S/N", "002081/2025", "2025-07-03", "2026-07-31", "±2ºC  - Temp. | ±10%UR – Umidade", "SIM", "TIEI0046"], ["AB3008", "Termômetro Clínico", "TORRINHA", "SOLIDOR", "S/N", "002254/2025", "2025-07-28", "2026-07-31", "± 0,2ºC", "SIM", "TIEI0279"], ["AB3001", "Manômetro Direito", "ITIRAPINA", "PROTEC", "S/N", "000547/2026", "2026-02-03", "2027-02-26", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3001", "Manômetro Esquerdo", "ITIRAPINA", "PROTEC", "S/N", "000549/2026", "2026-02-03", "2027-02-26", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3001", "Manômetro Baby", "ITIRAPINA", "PROTEC", "S/N", "000540/2026", "2026-02-03", "2027-02-26", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3001", "Oxímetro de Pulso Adulto", "ITIRAPINA", "Mediclini", "241202408863", "000350/2026", "2026-01-20", "2027-01-29", "± 2% SpO2 |± 2 BPM", "SIM", "EIEI0102"], ["AB3009", "Desencarcerador", "DOIS CORREGOS", "LUBRAX", "ESSENCIAL SL", "1018308", "2026-03-25", "2027-03-31", "NA", "SIM", "NÃO APLICAVEL"], ["AB3013", "Esfigmomanômetro Adulto", "PIRATININGA", "PREMIUM", "5399542", "002235/2025", "2025-07-28", "2026-07-31", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3009", "Termohigrômetro", "DOIS CORREGOS", "INCOTERM", "S/N", "002616/2025", "2025-08-29", "2026-08-31", "±2ºC  - Temp. | ±10%UR – Umidade", "SIM", "TIEI0046"], ["AB3009", "Luva isolante cl0 tp2 esquerda", "DOIS CORREGOS", "ORION", "25012917", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3009", "Luva isolante cl0 tp2 direita", "DOIS CORREGOS", "ORION", "25012938", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3009", "Tapete isolante classe 0 inteiriço", "DOIS CORREGOS", "BFLEX", "S/N", "52367", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3011", "Desencarcerador", "BORACÉIA", "LUBRAX", "ESSENCIAL SL", "1018308", "2026-03-25", "2027-03-31", "NA", "SIM", "NÃO APLICAVEL"], ["AB3003", "Câmera Térmica", "CORDEIRÓPOLIS", "HIKMICRO", "EA4365006", "001004/2026", "2026-02-26", "2027-02-26", "+ 2/ -2 °C", "SIM", "TIEI0254"], ["AB3003", "Esfigmomanômetro Adulto", "CORDEIRÓPOLIS", "SOLIDOR", "H 21753", "001969/2026", "2026-06-09", "2027-06-30", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3003", "Esfigmomanômetro Obeso", "CORDEIRÓPOLIS", "PREMIUM", "5931212", "001955/2026", "2026-06-09", "2027-06-30", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3003", "Esfigmomanômetro Infantil", "CORDEIRÓPOLIS", "SOLIDOR", "H67426", "003151/2025", "2025-12-11", "2026-12-31", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3013", "Oxímetro de Pulso Adulto", "PIRATININGA", "G-TECH", "223547642480", "002077/2025", "2025-07-03", "2026-07-31", "± 2% SpO2 |± 2 BPM", "SIM", "EIEI0102"], ["AB3013", "Termohigrômetro", "PIRATININGA", "INCOTERM", "S/N", "002258/2025", "2025-07-28", "2026-07-31", "±2ºC  - Temp. | ±10%UR – Umidade", "SIM", "TIEI0046"], ["AB3011", "Luva isolante cl0 tp2 esquerda", "BORACÉIA", "ORION", "25048747", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3011", "Luva isolante cl0 tp2 direita", "BORACÉIA", "ORION", "25048748", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3003", "Termohigrômetro", "CORDEIRÓPOLIS", "INCOTERM", "S/N", "001587/2026", "2026-04-28", "2027-04-30", "±2ºC  - Temp. | ±10%UR – Umidade", "SIM", "TIEI0209"], ["AB3003", "Termômetro Clínico", "CORDEIRÓPOLIS", "INCOTERM", "S/N", "001950/2026", "2026-06-08", "2027-06-30", "± 0,2ºC", "SIM", "TIEI0279"], ["AB3011", "Tapete isolante classe 0 inteiriço", "BORACÉIA", "BFLEX", "S/N", "51519", "2026-02-20", "2026-08-31", "Classe 0 → ensaio 5 kV", "SIM", ""], ["AB3012", "Manômetro Direito", "BAURU", "PROTEC", "S/N", "002497/2025", "2025-08-08", "2026-08-31", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3012", "Desencarcerador", "BAURU", "LUBRAX", "ESSENCIAL SL", "1018308", "2026-03-25", "2027-03-31", "NA", "SIM", "NÃO APLICAVEL"], ["AB3012", "Oxímetro de Pulso Adulto", "BAURU", "Mediclini", "E204246240100407", "002613/2025", "2025-08-29", "2026-08-31", "± 2% SpO2 |± 2 BPM", "SIM", "EIEI0102"], ["AB3012", "Luva isolante cl0 tp2 esquerda", "BAURU", "ORION", "25012915", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3004", "Câmera Térmica", "IPEÚNA", "HIKMICRO", "EA4365070", "001837/2026", "2026-05-21", "2027-05-31", "+ 2/ -2 °C", "SIM", "TIEI0254"], ["AB3004", "Esfigmomanômetro Infantil", "IPEÚNA", "PREMIUM", "7802371", "003156/2025", "2025-12-11", "2026-12-31", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3012", "Luva isolante cl0 tp2 direita", "BAURU", "ORION", "25012904", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3012", "Tapete isolante classe 0 inteiriço", "BAURU", "BFLEX", "S/N", "52367", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3015", "Termohigrômetro", "LUPÉRCIO", "INCOTERM", "S/N", "002256/2025", "2025-07-28", "2026-07-31", "±2ºC  - Temp. | ±10%UR – Umidade", "SIM", "TIEI0046"], ["AB3004", "Manômetro Esquerdo", "IPEÚNA", "PROTEC", "S/N", "000539/2026", "2026-02-03", "2027-02-26", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3004", "Manômetro Baby", "IPEÚNA", "PROTEC", "S/N", "003168/2025", "2025-12-12", "2026-12-31", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3004", "Oxímetro de Pulso Adulto", "IPEÚNA", "Mediclini", "241202408898", "000351/2026", "2026-01-20", "2027-01-29", "± 2% SpO2 |± 2 BPM", "SIM", "EIEI0102"], ["AB3004", "Termohigrômetro", "IPEÚNA", "INCOTERM", "S/N", "001589/2026", "2026-04-28", "2027-04-30", "±2ºC  - Temp. | ±10%UR – Umidade", "SIM", "TIEI0209"], ["AB3004", "Termômetro Clínico", "IPEÚNA", "G-TECH", "S/N", "001584/2026", "2026-04-28", "2027-04-30", "± 0,2ºC", "SIM", "TIEI0279"], ["AB3013", "Desencarcerador", "PIRATININGA", "LUBRAX", "ESSENCIAL SL", "1018308", "2026-03-25", "2027-03-31", "NA", "SIM", "NÃO APLICAVEL"], ["AB3013", "Luva isolante cl0 tp2 esquerda", "PIRATININGA", "ORION", "25048743", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3013", "Luva isolante cl0 tp2 direita", "PIRATININGA", "ORION", "25048744", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3013", "Tapete isolante classe 0 inteiriço", "PIRATININGA", "BFLEX", "S/N", "52367", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3014", "Esfigmomanômetro Adulto", "DUARTINA", "PREMIUM", "7297972", "002477/2025", "2025-08-08", "2026-08-31", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3016", "Esfigmomanômetro Adulto", "ORIENTE", "PREMIUM", "7862641", "002230/2025", "2025-07-28", "2026-07-31", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3005", "Esfigmomanômetro Infantil", "PIRACICABA", "PREMIUM", "5405804", "002950/2025", "2025-10-24", "2026-10-30", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3016", "Termohigrômetro", "ORIENTE", "INCOTERM", "S/N", "002082/2025", "2025-07-03", "2026-07-31", "±2ºC  - Temp. | ±10%UR – Umidade", "SIM", "TIEI0046"], ["AB3018", "Esfigmomanômetro Adulto", "UNIVERSO", "SOLIDOR", "H 40133", "002234/2025", "2025-07-28", "2026-07-31", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3005", "Manômetro Esquerdo", "PIRACICABA", "PROTEC", "S/N", "001598/2026", "2026-04-28", "2027-04-30", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3005", "Manômetro Baby", "PIRACICABA", "PROTEC", "S/N", "000548/2026", "2026-02-03", "2027-02-26", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3005", "Oxímetro de Pulso Adulto", "PIRACICABA", "Mediclini", "241202408858", "000340/2026", "2026-01-20", "2027-01-29", "± 2% SpO2 |± 2 BPM", "SIM", "EIEI0102"], ["AB3018", "Esfigmomanômetro Obeso", "UNIVERSO", "PREMIUM", "7809897", "002236/2025", "2025-07-28", "2026-07-31", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3005", "Termômetro Clínico", "PIRACICABA", "G-TECH", "S/N", "001379/2026", "2026-03-25", "2027-03-31", "± 0,2ºC", "SIM", "TIEI0279"], ["AB3005", "Câmera Térmica", "PIRACICABA", "HIKMICRO", "EA4365021", "001116/2026", "2026-03-11", "2027-03-31", "+ 2/ -2 °C", "SIM", "TIEI0254"], ["AB3014", "Oxímetro de Pulso Adulto", "DUARTINA", "BIC", "20115701020860", "002488/2025", "2025-08-08", "2026-08-31", "± 2% SpO2 |± 2 BPM", "SIM", "EIEI0102"], ["AB3014", "Termohigrômetro", "DUARTINA", "INCOTERM", "S/N", "002492/2025", "2025-08-08", "2026-08-31", "±2ºC  - Temp. | ±10%UR – Umidade", "SIM", "TIEI0046"], ["AB3014", "Desencarcerador", "DUARTINA", "LUBRAX", "ESSENCIAL SL", "1018308", "2026-03-25", "2027-03-31", "NA", "SIM", "NÃO APLICAVEL"], ["AB3014", "Luva isolante cl0 tp2 esquerda", "DUARTINA", "ORION", "25048765", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3014", "Luva isolante cl0 tp2 direita", "DUARTINA", "ORION", "25048766", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3007", "Esfigmomanômetro Adulto", "SÃO PEDRO", "PREMIUM", "5841983", "001713/2026", "2026-05-11", "2027-05-31", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3007", "Esfigmomanômetro Obeso", "SÃO PEDRO", "BIC", "737771", "003157/2025", "2025-12-11", "2026-12-31", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3007", "Esfigmomanômetro Infantil", "SÃO PEDRO", "PREMIUM", "5419323", "001729/2026", "2026-05-11", "2027-05-31", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3007", "Manômetro Direito", "SÃO PEDRO", "PROTEC", "S/N", "003164/2025", "2025-12-11", "2026-12-31", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3007", "Manômetro Esquerdo", "SÃO PEDRO", "WHITE MARTINS", "S/N", "001600/2026", "2026-04-28", "2027-04-30", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3007", "Manômetro Baby", "SÃO PEDRO", "PROTEC", "S/N", "001974/2026", "2026-06-09", "2027-06-30", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3007", "Oxímetro de Pulso Adulto", "SÃO PEDRO", "Mediclini", "241202408851", "000347/2026", "2026-01-20", "2027-01-29", "± 2% SpO2 |± 2 BPM", "SIM", "EIEI0102"], ["AB3018", "Manômetro Direito", "UNIVERSO", "PROTEC", "S/N", "002275/2025", "2025-07-28", "2026-07-31", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3007", "Termômetro Clínico", "SÃO PEDRO", "G-TECH", "S/N", "001585/2026", "2026-04-28", "2027-04-30", "± 0,2ºC", "SIM", "TIEI0279"], ["AB3007", "Câmera Térmica", "SÃO PEDRO", "HIKMICRO", "EA4365048", "001122/2026", "2026-03-11", "2027-03-31", "+ 2/ -2 °C", "SIM", "TIEI0254"], ["AB3014", "Tapete isolante classe 0 inteiriço", "DUARTINA", "BFLEX", "S/N", "52367", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3015", "Esfigmomanômetro Adulto", "LUPÉRCIO", "SOLIDOR", "G 65885", "002479/2025", "2025-08-08", "2026-08-31", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3015", "Desencarcerador", "LUPÉRCIO", "LUBRAX", "ESSENCIAL SL", "1018308", "2026-03-25", "2027-03-31", "NA", "SIM", "NÃO APLICAVEL"], ["AB3015", "Luva isolante cl0 tp2 esquerda", "LUPÉRCIO", "ORION", "25012927", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3015", "Luva isolante cl0 tp2 direita", "LUPÉRCIO", "ORION", "25012928", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3008", "Câmera Térmica", "TORRINHA", "HIKMICRO", "EA4365027", "001839/2026", "2026-05-21", "2027-05-31", "+ 2/ -2 °C", "SIM", "TIEI0254"], ["AB3008", "Esfigmomanômetro Adulto", "TORRINHA", "PREMIUM", "7807628", "001712/2026", "2026-05-11", "2027-05-31", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3008", "Esfigmomanômetro Obeso", "TORRINHA", "SOLIDOR", "886493", "001716/2026", "2026-05-11", "2027-05-31", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3008", "Esfigmomanômetro Infantil", "TORRINHA", "BIC", "785709", "001959/2026", "2026-06-09", "2027-06-30", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3008", "Manômetro Esquerdo", "TORRINHA", "PROTEC", "S/N", "001980/2026", "2026-06-09", "2027-06-30", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3008", "Manômetro Baby", "TORRINHA", "PROTEC", "S/N", "000550/2026", "2026-02-03", "2027-02-26", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3015", "Tapete isolante classe 0 inteiriço", "LUPÉRCIO", "BFLEX", "S/N", "51521", "2026-02-20", "2026-08-31", "Classe 0 → ensaio 5 kV", "SIM", ""], ["AB3008", "Oxímetro de Pulso Adulto", "TORRINHA", "Mediclini", "241202408878", "000323/2026", "2026-01-20", "2027-01-29", "± 2% SpO2 |± 2 BPM", "SIM", "EIEI0102"], ["AB3018", "Manômetro Esquerdo", "UNIVERSO", "PROTEC", "S/N", "002264/2025", "2025-07-28", "2026-07-31", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3016", "Desencarcerador", "ORIENTE", "LUBRAX", "ESSENCIAL SL", "1018308", "2026-03-25", "2027-03-31", "NA", "SIM", "NÃO APLICAVEL"], ["AB3016", "Luva isolante cl0 tp2 esquerda", "ORIENTE", "ORION", "25012933", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3016", "Luva isolante cl0 tp2 direita", "ORIENTE", "ORION", "25012910", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3016", "Tapete isolante classe 0 inteiriço", "ORIENTE", "BFLEX", "S/N", "52367", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3018", "Oxímetro de Pulso Adulto", "UNIVERSO", "MORIYA", "164915308110", "002489/2025", "2025-08-08", "2026-08-31", "± 2% SpO2 |± 2 BPM", "SIM", "EIEI0102"], ["AB3018", "Desencarcerador", "UNIVERSO", "LUBRAX", "ESSENCIAL SL", "1018308", "2026-03-25", "2027-03-31", "NA", "SIM", "NÃO APLICAVEL"], ["AB3009", "Esfigmomanômetro Adulto", "DOIS CORREGOS", "PREMIUM", "6359411", "001356/2026", "2026-03-25", "2027-03-31", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3009", "Esfigmomanômetro Obeso", "DOIS CORREGOS", "PREMIUM", "7807031", "001580/2026", "2026-04-29", "2027-04-30", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3009", "Esfigmomanômetro Infantil", "DOIS CORREGOS", "PREMIUM", "7800775", "001574/2026", "2026-04-29", "2027-04-30", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3009", "Manômetro Direito", "DOIS CORREGOS", "PROTEC", "S/N", "001374/2026", "2026-03-25", "2027-03-31", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3009", "Manômetro Esquerdo", "DOIS CORREGOS", "PROTEC", "S/N", "001976/2026", "2026-06-09", "2027-06-30", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3009", "Manômetro Baby", "DOIS CORREGOS", "PROTEC", "S/N", "001375/2026", "2026-03-25", "2027-03-31", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3009", "Oxímetro de Pulso Adulto", "DOIS CORREGOS", "Mediclini", "241202408877", "000338/2026", "2026-01-20", "2027-01-29", "± 2% SpO2 |± 2 BPM", "SIM", "EIEI0102"], ["AB3018", "Luva isolante cl0 tp2 esquerda", "UNIVERSO", "ORION", "25048741", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3009", "Termômetro Clínico", "DOIS CORREGOS", "SOLIDOR", "S/N", "001946/2026", "2026-06-08", "2027-06-30", "± 0,2ºC", "SIM", "TIEI0279"], ["AB3009", "Câmera Térmica", "DOIS CORREGOS", "HIKMICRO", "EA4365054", "001121/2026", "2026-03-11", "2027-03-31", "+ 2/ -2 °C", "SIM", "TIEI0254"], ["AB3018", "Luva isolante cl0 tp2 direita", "UNIVERSO", "ORION", "25048742", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3018", "Tapete isolante classe 0 inteiriço", "UNIVERSO", "BFLEX", "S/N", "52367", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3019", "Desencarcerador", "OSVALDO CRUZ", "LUBRAX", "ESSENCIAL SL", "1018308", "2026-03-25", "2027-03-31", "NA", "SIM", "NÃO APLICAVEL"], ["AB3019", "Manômetro Direito", "OSVALDO CRUZ", "PROTEC", "S/N", "002762/2025", "2025-09-11", "2026-09-30", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3019", "Luva isolante cl0 tp2 esquerda", "OSVALDO CRUZ", "ORION", "25048761", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3011", "Câmera Térmica", "BORACÉIA", "HIKMICRO", "EA4365093", "001838/2026", "2026-05-21", "2027-05-31", "+ 2/ -2 °C", "SIM", "TIEI0254"], ["AB3011", "Esfigmomanômetro Adulto", "BORACÉIA", "SOLIDOR", "G55167", "003153/2025", "2025-12-11", "2026-12-31", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3011", "Esfigmomanômetro Obeso", "BORACÉIA", "SOLIDOR", "H 22752", "003155/2025", "2025-12-11", "2026-12-31", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3011", "Esfigmomanômetro Infantil", "BORACÉIA", "MEDICATE", "19048785", "003161/2025", "2025-12-11", "2026-12-31", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3011", "Manômetro Direito", "BORACÉIA", "PROTEC", "S/N", "003178/2025", "2025-12-12", "2026-12-31", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3011", "Manômetro Esquerdo", "BORACÉIA", "PROTEC", "S/N", "002962/2025", "2025-10-24", "2026-10-30", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3011", "Manômetro Baby", "BORACÉIA", "PROTEC", "S/N", "002961/2025", "2025-10-24", "2026-10-30", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3011", "Oxímetro de Pulso Adulto", "BORACÉIA", "MORIYA", "160315209683", "003141/2025", "2025-12-11", "2026-12-31", "± 2% SpO2 |± 2 BPM", "SIM", "EIEI0102"], ["AB3011", "Termohigrômetro", "BORACÉIA", "INCOTERM", "", "", "2026-06-08", "2027-06-30", "±2ºC  - Temp. | ±10%UR – Umidade", "SIM", "TIEI0046"], ["AB3011", "Termômetro Clínico", "BORACÉIA", "MEDEQCO", "S/N", "003145/2025", "2025-12-11", "2026-12-31", "± 0,2ºC", "SIM", "TIEI0279"], ["AB3019", "Luva isolante cl0 tp2 direita", "OSVALDO CRUZ", "ORION", "25048762", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3019", "Tapete isolante classe 0 inteiriço", "OSVALDO CRUZ", "BFLEX", "S/N", "52367", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3020", "Desencarcerador", "ADAMANTINA", "LUBRAX", "ESSENCIAL SL", "1018308", "2026-03-25", "2027-03-31", "NA", "SIM", "NÃO APLICAVEL"], ["AB3020", "Luva isolante cl0 tp2 esquerda", "ADAMANTINA", "ORION", "25048767", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3020", "Luva isolante cl0 tp2 direita", "ADAMANTINA", "ORION", "25048768", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3012", "Esfigmomanômetro Adulto", "BAURU", "SOLIDOR", "G24016", "002951/2025", "2025-10-24", "2026-10-30", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3012", "Esfigmomanômetro Obeso", "BAURU", "SOLIDOR", "H22750", "003160/2025", "2025-12-11", "2026-12-31", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3012", "Esfigmomanômetro Infantil", "BAURU", "P.A.MED", "312091", "001970/2026", "2026-06-09", "2027-06-30", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3018", "Termohigrômetro", "UNIVERSO", "INCOTERM", "S/N", "002084/2025", "2025-07-03", "2026-07-31", "±2ºC  - Temp. | ±10%UR – Umidade", "SIM", "TIEI0046"], ["AB3012", "Manômetro Esquerdo", "BAURU", "PROTEC", "S/N", "003177/2025", "2025-12-12", "2026-12-31", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3012", "Manômetro Baby", "BAURU", "PROTEC", "S/N", "003174/2025", "2025-12-12", "2026-12-31", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3020", "Tapete isolante classe 0 inteiriço", "ADAMANTINA", "BFLEX", "S/N", "52367", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3012", "Termohigrômetro", "BAURU", "INCOTERM", "S/N", "001944/2026", "2026-06-08", "2027-06-30", "±2ºC  - Temp. | ±10%UR – Umidade", "SIM", "TIEI0209"], ["AB3012", "Termômetro Clínico", "BAURU", "G-TECH", "S/N", "003148/2025", "2025-12-11", "2026-12-31", "± 0,2ºC", "SIM", "TIEI0279"], ["AB3012", "Câmera Térmica", "BAURU", "HIKMICRO", "EA4365064", "001129/2026", "2026-03-11", "2027-03-31", "+ 2/ -2 °C", "SIM", "TIEI0254"], ["AB3021", "Desencarcerador", "JUNQUEIRÓPOLIS", "LUBRAX", "ESSENCIAL SL", "1018308", "2026-03-25", "2027-03-31", "NA", "SIM", "NÃO APLICAVEL"], ["AB3021", "Manômetro Direito", "JUNQUEIRÓPOLIS", "PROTEC", "S/N", "002765/2025", "2025-09-11", "2026-09-30", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3021", "Oxímetro de Pulso Adulto", "JUNQUEIRÓPOLIS", "MEDICLINI", "E204246240102380", "002611/2025", "2025-08-29", "2026-08-31", "± 2% SpO2 |± 2 BPM", "SIM", "EIEI0120"], ["AB3021", "Luva isolante cl0 tp2 esquerda", "JUNQUEIRÓPOLIS", "ORION", "24323463", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3021", "Luva isolante cl0 tp2 direita", "JUNQUEIRÓPOLIS", "ORION", "24342840", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3030", "Câmera Térmica", "GUARAPUÃ", "HIKMICRO", "EA4365018", "001831/2026", "2026-05-21", "2027-05-31", "+ 2/ -2 °C", "SIM", "TIEI0254"], ["AB3030", "Esfigmomanômetro Adulto", "GUARAPUÃ", "PREMIUM", "7297163", "002953/2025", "2025-10-24", "2026-10-30", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3030", "Esfigmomanômetro Obeso", "GUARAPUÃ", "PREMIUM", "7802373", "001359/2026", "2026-03-25", "2027-03-31", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3030", "Esfigmomanômetro Infantil", "GUARAPUÃ", "PREMIUM", "7855455", "001357/2026", "2026-03-25", "2027-03-31", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3030", "Manômetro Direito", "GUARAPUÃ", "PROTEC", "", "", "2026-06-09", "2027-06-30", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3030", "Manômetro Esquerdo", "GUARAPUÃ", "PROTEC", "S/N", "001599/2026", "2026-04-28", "2027-04-30", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3018", "Termômetro Clínico", "UNIVERSO", "G-TECH", "S/N", "002244/2025", "2025-07-28", "2026-07-31", "± 0,2ºC", "SIM", "TIEI0279"], ["AB3030", "Oxímetro de Pulso Adulto", "GUARAPUÃ", "MORIYA", "165115207647", "003140/2025", "2025-12-11", "2026-12-31", "± 2% SpO2 |± 2 BPM", "SIM", "EIEI0102"], ["AB3021", "Tapete isolante classe 0 inteiriço", "JUNQUEIRÓPOLIS", "BFLEX", "S/N", "52367", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3030", "Termômetro Clínico", "GUARAPUÃ", "G-TECH", "S/N", "001583/2026", "2026-04-28", "2027-04-30", "± 0,2ºC", "SIM", "TIEI0279"], ["AB3022", "Desencarcerador", "SANTA MERCEDES", "LUBRAX", "ESSENCIAL SL", "1018308", "2026-03-25", "2027-03-31", "NA", "SIM", "NÃO APLICAVEL"], ["AB3022", "Luva isolante cl0 tp2 esquerda", "SANTA MERCEDES", "ORION", "25012929", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3022", "Luva isolante cl0 tp2 direita", "SANTA MERCEDES", "ORION", "25012930", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3022", "Tapete isolante classe 0 inteiriço", "SANTA MERCEDES", "BFLEX", "S/N", "51520", "2026-02-20", "2026-08-31", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3023", "Desencarcerador", "GUACHOS", "LUBRAX", "ESSENCIAL SL", "1018308", "2026-03-25", "2027-03-31", "NA", "SIM", "NÃO APLICAVEL"], ["AB3031", "Esfigmomanômetro Adulto", "BROTAS", "PREMIUM", "4587787", "001957/2026", "2026-06-09", "2027-06-30", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3019", "Esfigmomanômetro Adulto", "OSVALDO CRUZ", "SOLIDOR", "C 99776", "002225/2025", "2025-07-28", "2026-07-31", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3031", "Esfigmomanômetro Obeso", "BROTAS", "PREMIUM", "5844505", "001965/2026", "2026-06-09", "2027-06-30", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3023", "Luva isolante cl0 tp2 esquerda", "GUACHOS", "ORION", "24342839", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3019", "Esfigmomanômetro Obeso", "OSVALDO CRUZ", "PREMIUM", "7800789", "002228/2025", "2025-07-28", "2026-07-31", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3019", "Termohigrômetro", "OSVALDO CRUZ", "INCOTERM", "S/N", "002154/2025", "2025-07-10", "2026-07-31", "±2ºC  - Temp. | ±10%UR – Umidade", "SIM", "TIEI0046"], ["AB3023", "Luva isolante cl0 tp2 direita", "GUACHOS", "ORION", "24323466", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3031", "Termohigrômetro", "BROTAS", "INCOTERM", "163278", "001033/2026", "2026-03-03", "2027-03-31", "±2ºC  - Temp. | ±10%UR – Umidade", "SIM", "TIEI0209"], ["AB3020", "Esfigmomanômetro Adulto", "ADAMANTINA", "PREMIUM", "5965418", "002227/2025", "2025-07-28", "2026-07-31", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3031", "Câmera Térmica", "BROTAS", "HIKMICRO", "EA4365083", "001120/2026", "2026-03-11", "2027-03-31", "+ 2/ -2 °C", "SIM", "TIEI0254"], ["AB3023", "Tapete isolante classe 0 inteiriço", "GUACHOS", "BFLEX", "S/N", "52367", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3025", "Termohigrômetro", "RANCHARIA", "INCOTERM", "S/N", "002491/2025", "2025-08-08", "2026-08-31", "±2ºC  - Temp. | ±10%UR – Umidade", "SIM", "TIEI0046"], ["AB3025", "Desencarcerador", "RANCHARIA", "LUBRAX", "ESSENCIAL SL", "1018308", "2026-03-25", "2027-03-31", "NA", "SIM", "NÃO APLICAVEL"], ["AB3025", "Luva isolante cl0 tp2 esquerda", "RANCHARIA", "ORION", "24323465", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3025", "Luva isolante cl0 tp2 direita", "RANCHARIA", "ORION", "24323458", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3032", "Esfigmomanômetro Adulto", "ITIRAPINA II", "PREMIUM", "7802370", "001364/2026", "2026-03-25", "2027-03-31", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3032", "Esfigmomanômetro Obeso", "ITIRAPINA II", "PREMIUM", "5856705", "001966/2026", "2026-06-09", "2027-06-30", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3020", "Termohigrômetro", "ADAMANTINA", "INCOTERM", "S/N", "002155/2025", "2025-07-10", "2026-07-31", "±2ºC  - Temp. | ±10%UR – Umidade", "SIM", "TIEI0046"], ["AB3032", "Manômetro Direito", "ITIRAPINA II", "PROTEC", "S/N", "001597/2026", "2026-04-28", "2027-04-30", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3032", "Manômetro Esquerdo", "ITIRAPINA II", "PROTEC", "S/N", "001596/2026", "2026-04-28", "2027-04-30", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3032", "Manômetro Baby", "ITIRAPINA II", "PROTEC", "S/N", "001595/2026", "2026-04-28", "2027-04-30", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3032", "Oxímetro de Pulso Adulto", "ITIRAPINA II", "Mediclini", "241202408919", "000321/2026", "2026-01-20", "2027-01-29", "± 2% SpO2 |± 2 BPM", "SIM", "EIEI0102"], ["AB3032", "Termohigrômetro", "ITIRAPINA II", "INCOTERM", "S/N", "001032/2026", "2026-03-03", "2027-03-31", "±2ºC  - Temp. | ±10%UR – Umidade", "SIM", "TIEI0209"], ["AB3021", "Esfigmomanômetro Adulto", "JUNQUEIRÓPOLIS", "PREMIUM", "7372900", "002229/2025", "2025-07-28", "2026-07-31", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3032", "Câmera Térmica", "ITIRAPINA II", "HIKMICRO", "EA4365072", "001119/2026", "2026-03-11", "2027-03-31", "+ 2/ -2 °C", "SIM", "TIEI0254"], ["AB3025", "Tapete isolante classe 0 inteiriço", "RANCHARIA", "BFLEX", "S/N", "51520", "2026-02-20", "2026-08-31", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3026", "Desencarcerador", "QUATÁ", "LUBRAX", "ESSENCIAL SL", "1018308", "2026-03-25", "2027-03-31", "NA", "SIM", "NÃO APLICAVEL"], ["AB3026", "Luva isolante cl0 tp2 esquerda", "QUATÁ", "ORION", "25012931", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3026", "Luva isolante cl0 tp2 direita", "QUATÁ", "ORION", "25012908", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3026", "Tapete isolante classe 0 inteiriço", "QUATÁ", "BFLEX", "S/N", "52367", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3013", "Esfigmomanômetro Obeso", "PIRATININGA", "SOLIDOR", "F 86521", "001352/2026", "2026-03-25", "2027-03-31", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3021", "Esfigmomanômetro Obeso", "JUNQUEIRÓPOLIS", "PREMIUM", "5139447", "002237/2025", "2025-07-28", "2026-07-31", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3013", "Esfigmomanômetro Infantil", "PIRATININGA", "BIC", "212489", "001964/2026", "2026-06-09", "2027-06-30", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3013", "Manômetro Direito", "PIRATININGA", "PROTEC", "S/N", "002963/2025", "2025-10-24", "2026-10-30", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3013", "Manômetro Esquerdo", "PIRATININGA", "PROTEC", "S/N", "003172/2025", "2025-12-12", "2026-12-31", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3013", "Manômetro Baby", "PIRATININGA", "PROTEC", "S/N", "003175/2025", "2025-12-12", "2026-12-31", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3022", "Manômetro Direito", "SANTA MERCEDES", "PROTEC", "S/N", "002270/2025", "28/07/2025", "2026-07-31", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3022", "Oxímetro de Pulso Adulto", "SANTA MERCEDES", "MORIYA", "165115207642", "002240/2025", "2025-07-28", "2026-07-31", "± 2% SpO2 |± 2 BPM", "SIM", "EIEI0102"], ["AB3013", "Termômetro Clínico", "PIRATININGA", "SOLIDOR", "S/N", "001948/2026", "2026-06-08", "2027-06-30", "± 0,2ºC", "SIM", "TIEI0279"], ["AB3013", "Câmera Térmica", "PIRATININGA", "HIKMICRO", "EA4365029", "001126/2026", "2026-03-11", "2027-03-31", "+ 2/ -2 °C", "SIM", "TIEI0254"], ["AB3027", "Esfigmomanômetro Adulto", "ASSIS", "BIC", "919648", "002481/2025", "2025-08-08", "2026-08-31", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3027", "Esfigmomanômetro Obeso", "ASSIS", "PREMIUM", "6026013", "002480/2025", "2025-08-08", "2026-08-31", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3027", "Termohigrômetro", "ASSIS", "INCOTERM", "S/N", "002495/2025", "2025-08-08", "2026-08-31", "±2ºC  - Temp. | ±10%UR – Umidade", "SIM", "TIEI0046"], ["AB3027", "Desencarcerador", "ASSIS", "LUBRAX", "ESSENCIAL SL", "1018308", "2026-03-25", "2027-03-31", "NA", "SIM", "NÃO APLICAVEL"], ["AB3027", "Oxímetro de Pulso Adulto", "ASSIS", "MEDICLINI", "E204246240101214", "002614/2025", "2025-08-29", "2026-08-31", "± 2% SpO2 |± 2 BPM", "SIM", "EIEI0102"], ["AB3014", "Câmera Térmica", "DUARTINA", "HIKMICRO", "EA4365052", "001835/2026", "2026-05-21", "2027-05-31", "+ 2/ -2 °C", "SIM", "TIEI0254"], ["AB3014", "Esfigmomanômetro Obeso", "DUARTINA", "PREMIUM", "6731936", "003162/2025", "2025-12-11", "2026-12-31", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3014", "Esfigmomanômetro Infantil", "DUARTINA", "PREMIUM", "7864092", "003154/2025", "2025-12-11", "2026-12-31", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3022", "Termohigrômetro", "SANTA MERCEDES", "INCOTERM", "S/N", "002257/2025", "2025-07-28", "2026-07-31", "±2ºC  - Temp. | ±10%UR – Umidade", "SIM", "TIEI0046"], ["AB3014", "Manômetro Direito", "DUARTINA", "PROTEC", "S/N", "003170/2025", "2025-12-12", "2026-12-31", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3014", "Manômetro Esquerdo", "DUARTINA", "PROTEC", "S/N", "003179/2025", "2025-12-12", "2026-12-31", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3014", "Manômetro Baby", "DUARTINA", "PROTEC", "S/N", "000542/2026", "2026-02-03", "2027-02-26", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3023", "Manômetro Direito", "GUACHOS", "PROTEC", "S/N", "002269/2025", "28/07/2025", "2026-07-31", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3023", "Manômetro Esquerdo", "GUACHOS", "PROTEC", "S/N", "002274/2025", "2025-07-28", "2026-07-31", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3014", "Termômetro Clínico", "DUARTINA", "G-TECH", "S/N", "001377/2026", "2026-03-25", "2027-03-31", "± 0,2ºC", "SIM", "TIEI0279"], ["AB3027", "Luva isolante cl0 tp2 esquerda", "ASSIS", "ORION", "24323457", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3027", "Luva isolante cl0 tp2 direita", "ASSIS", "ORION", "24323464", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3027", "Tapete isolante classe 0 inteiriço", "ASSIS", "BFLEX", "S/N", "52367", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3028", "Desencarcerador", "MARÍLIA", "LUBRAX", "ESSENCIAL SL", "1018308", "2026-03-25", "2027-03-31", "NA", "SIM", "NÃO APLICAVEL"], ["AB3028", "Luva isolante cl0 tp2 esquerda", "MARÍLIA", "ORION", "24342859", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3015", "Câmera Térmica", "LUPÉRCIO", "HIKMICRO", "EA4365085", "001841/2026", "2026-05-21", "2027-05-31", "+ 2/ -2 °C", "SIM", "TIEI0254"], ["AB3015", "Esfigmomanômetro Obeso", "LUPÉRCIO", "PREMIUM", "7863567", "001581/2026", "2026-04-29", "2027-04-30", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0068"], ["AB3015", "Esfigmomanômetro Infantil", "LUPÉRCIO", "P.A.MED", "312098", "001971/2026", "2026-06-09", "2027-06-30", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0068"], ["AB3023", "Oxímetro de Pulso Adulto", "GUACHOS", "MORIYA", "164915308173", "002241/2025", "2025-07-28", "2026-07-31", "± 2% SpO2 |± 2 BPM", "SIM", "EIEI0102"], ["AB3015", "Manômetro Direito", "LUPÉRCIO", "PROTEC", "S/N", "003173/2025", "2025-12-12", "2026-12-31", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3015", "Manômetro Esquerdo", "LUPÉRCIO", "PROTEC", "S/N", "003166/2025", "2025-12-12", "2026-12-31", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3015", "Manômetro Baby", "LUPÉRCIO", "PROTEC", "S/N", "003167/2025", "2025-12-11", "2026-12-31", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3015", "Oxímetro de Pulso Adulto", "LUPÉRCIO", "MORIYA", "165115207641", "003142/2025", "2025-12-11", "2026-12-31", "± 2% SpO2 |± 2 BPM", "SIM", "EIEI0102"], ["AB3023", "Termômetro Clínico", "GUACHOS", "INCOTERM", "S/N", "002253/2025", "2026-07-28", "2027-07-30", "± 0,2ºC", "SIM", "TIEI0279"], ["AB3015", "Termômetro Clínico", "LUPÉRCIO", "SOLIDOR", "S/N", "001945/2026", "2026-06-08", "2027-06-30", "± 0,2ºC", "SIM", "TIEI0279"], ["AB3028", "Luva isolante cl0 tp2 direita", "MARÍLIA", "ORION", "24342860", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3028", "Tapete isolante classe 0 inteiriço", "MARÍLIA", "BFLEX", "S/N", "52367", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3029", "Desencarcerador", "GÁLIA", "LUBRAX", "ESSENCIAL SL", "1018308", "2026-03-25", "2027-03-31", "NA", "SIM", "NÃO APLICAVEL"], ["AB3029", "Luva isolante cl0 tp2 esquerda", "GÁLIA", "ORION", "25048745", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3029", "Luva isolante cl0 tp2 direita", "GÁLIA", "ORION", "25048746", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3028", "Câmera Térmica", "MARÍLIA", "HIKMICRO", "EA4365002", "001441/2026", "2026-03-31", "2027-03-31", "+ 2/ -2 °C", "SIM", "TIEI0254"], ["AB3028", "Esfigmomanômetro Adulto", "MARÍLIA", "PREMIUM", "7807610", "001355/2026", "2026-03-25", "2027-03-31", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3028", "Esfigmomanômetro Obeso", "MARÍLIA", "PREMIUM", "7802375", "001358/2026", "2026-03-25", "2027-03-31", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3028", "Esfigmomanômetro Infantil", "MARÍLIA", "SOLIDOR", "G 37641", "001575/2026", "2026-04-29", "2027-04-30", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3028", "Manômetro Direito", "MARÍLIA", "PROTEC", "S/N", "002956/2025", "2025-10-24", "2026-10-30", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3028", "Manômetro Esquerdo", "MARÍLIA", "PROTEC", "S/N", "002957/2025", "2025-10-24", "2026-10-30", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3028", "Manômetro Baby", "MARÍLIA", "PROTEC", "S/N", "002958/2025", "2025-10-24", "2026-10-30", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3028", "Oxímetro de Pulso Adulto", "MARÍLIA", "MORIYA", "133927100244", "003139/2025", "2025-12-11", "2026-12-31", "± 2% SpO2 |± 2 BPM", "SIM", "EIEI0102"], ["AB3028", "Termohigrômetro", "MARÍLIA", "INCOTERM", "", "", "2026-06-08", "2027-06-30", "±2ºC  - Temp. | ±10%UR – Umidade", "SIM", "TIEI0046"], ["AB3028", "Termômetro Clínico", "MARÍLIA", "G-TECH", "S/N", "001378/2026", "2026-03-25", "2027-03-31", "± 0,2ºC", "SIM", "TIEI0279"], ["AB3029", "Tapete isolante classe 0 inteiriço", "GÁLIA", "BFLEX", "S/N", "52367", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3030", "Luva isolante cl0 tp2 esquerda", "GUARAPUÃ", "ORION", "25012911", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3030", "Luva isolante cl0 tp2 direita", "GUARAPUÃ", "ORION", "25048740", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3030", "Tapete isolante classe 0 inteiriço", "GUARAPUÃ", "BFLEX", "S/N", "52367", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3030", "Desencarcerador", "GUARAPUÃ", "LUBRAX", "ESSENCIAL SL", "1018308", "2026-03-25", "2027-03-31", "NA", "SIM", "NÃO APLICAVEL"], ["AB3029", "Esfigmomanômetro Adulto", "GÁLIA", "PREMIUM", "7802366", "001577/2026", "2026-04-29", "2027-04-30", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3029", "Esfigmomanômetro Obeso", "GÁLIA", "P.A.MED", "309753", "001354/2026", "2026-03-25", "2027-03-31", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3029", "Esfigmomanômetro Infantil", "GÁLIA", "SOLIDOR", "I 38104", "001579/2026", "2026-04-29", "2027-04-30", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3029", "Manômetro Direito", "GÁLIA", "PROTEC", "S/N", "002959/2025", "2025-10-24", "2026-10-30", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3025", "Esfigmomanômetro Adulto", "RANCHARIA", "PREMIUM", "4579580", "002226/2025", "2025-07-28", "2026-07-31", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3029", "Manômetro Esquerdo", "GÁLIA", "PROTEC", "S/N", "003171/2025", "2025-12-12", "2026-12-31", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3029", "Oxímetro de Pulso Adulto", "GÁLIA", "BIC", "21062801020301721", "003143/2025", "2025-12-11", "2026-12-31", "± 2% SpO2 |± 2 BPM", "SIM", "EIEI0102"], ["AB3029", "Termohigrômetro", "GÁLIA", "INCOTERM", "", "", "2026-06-08", "2027-06-30", "±2ºC  - Temp. | ±10%UR – Umidade", "SIM", "TIEI0046"], ["AB3029", "Termômetro Clínico", "GÁLIA", "G-TECH", "S/N", "003147/2025", "2025-12-11", "2026-12-31", "± 0,2ºC", "SIM", "TIEI0279"], ["AB3029", "Câmera Térmica", "GÁLIA", "HIKMICRO", "EA4365066", "001125/2026", "2026-03-11", "2027-03-31", "+ 2/ -2 °C", "SIM", "TIEI0254"], ["AB3030", "Termohigrômetro", "GUARAPUÃ", "INCOTERM", "S/N", "002615/2025", "2025-08-29", "2026-08-31", "±2ºC  - Temp. | ±10%UR – Umidade", "SIM", "TIEI0046"], ["AB3031", "Luva isolante cl0 tp2 esquerda", "BROTAS", "ORION", "25012905", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3031", "Luva isolante cl0 tp2 direita", "BROTAS", "ORION", "25012918", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3031", "Tapete isolante classe 0 inteiriço", "BROTAS", "BFLEX", "S/N", "52367", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3031", "Desencarcerador", "BROTAS", "LUBRAX", "ESSENCIAL SL", "1018308", "2026-03-25", "2027-03-31", "NA", "SIM", "NÃO APLICAVEL"], ["AB3016", "Câmera Térmica", "ORIENTE", "HIKMICRO", "EA4365045", "001840/2026", "2026-05-21", "2027-05-31", "+ 2/ -2 °C", "SIM", "TIEI0254"], ["AB3016", "Esfigmomanômetro Obeso", "ORIENTE", "PREMIUM", "7862699", "001573/2026", "2026-04-29", "2027-04-30", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3016", "Esfigmomanômetro Infantil", "ORIENTE", "PREMIUM", "7800809", "001578/2026", "2026-04-29", "2027-04-30", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3031", "Manômetro Direito", "BROTAS", "PROTEC", "S/N", "002764/2025", "2025-09-11", "2026-09-30", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3016", "Manômetro Direito", "ORIENTE", "PROTEC", "S/N", "002965/2025", "2025-10-24", "2026-10-30", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3016", "Manômetro Esquerdo", "ORIENTE", "PROTEC", "S/N", "000546/2026", "2026-02-03", "2027-02-26", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3016", "Manômetro Baby", "ORIENTE", "PROTEC", "S/N", "002960/2025", "2025-10-24", "2026-10-30", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3016", "Oxímetro de Pulso Adulto", "ORIENTE", "MEDICLINI", "241202408837", "000336/2026", "2026-01-20", "2027-01-29", "± 2% SpO2 |± 2 BPM", "SIM", "EIEI0102"], ["AB3026", "Esfigmomanômetro Adulto", "QUATÁ", "PREMIUM", "7863594", "002224/2025", "2025-07-28", "2026-07-31", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3016", "Termômetro Clínico", "ORIENTE", "G-TECH", "S/N", "003146/2025", "2025-12-11", "2026-12-31", "± 0,2ºC", "SIM", "TIEI0279"], ["AB3031", "Oxímetro de Pulso Adulto", "BROTAS", "Mediclini", "E204246240104065", "002610/2025", "2025-08-29", "2026-08-31", "± 2% SpO2 |± 2 BPM", "SIM", "EIEI0102"], ["AB3031", "Esfigmomanômetro Infantil", "BROTAS", "BIC", "779901", "002483/2025", "2025-08-08", "2026-08-31", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3032", "Luva isolante cl0 tp2 esquerda", "ITIRAPINA II", "ORION", "25048759", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3032", "Luva isolante cl0 tp2 direita", "ITIRAPINA II", "ORION", "25048760", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3032", "Tapete isolante classe 0 inteiriço", "ITIRAPINA II", "BFLEX", "S/N", "52367", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3026", "Manômetro Direito", "QUATÁ", "PROTEC", "S/N", "002273/2025", "2025-07-28", "2026-07-31", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3018", "Esfigmomanômetro Infantil", "UNIVERSO", "SOLIDOR", "H30703", "003181/2025", "2025-12-11", "2026-12-31", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3032", "Desencarcerador", "ITIRAPINA II", "LUBRAX", "ESSENCIAL SL", "1018308", "2026-03-25", "2027-03-31", "NA", "SIM", "NÃO APLICAVEL"], ["AB3018", "Manômetro Baby", "UNIVERSO", "PROTEC", "S/N", "001594/2026", "2026-04-28", "2027-04-30", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3027", "Esfigmomanômetro Infantil", "ASSIS", "PREMIUM", "6361286", "002232/2025", "2025-07-28", "2026-07-31", "± 4 mmHg", "SIM", "PIEI0068"], ["RESERVA", "Esfigmomanômetro Adulto", "ESCRÍTORIO", "", "", "", "2025-08-08", "2026-08-31", "", "", ""], ["AB3027", "Manômetro Direito", "ASSIS", "PROTEC", "S/N", "002267/2025", "2025-07-28", "2026-07-31", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["RESERVA", "Esfigmomanômetro Obeso", "ESCRÍTORIO", "", "", "", "2025-08-08", "2026-08-31", "", "", ""], ["AB3029", "Manômetro Baby", "GÁLIA", "PROTEC", "S/N", "002263/2025", "2025-07-28", "2026-07-31", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3018", "Câmera Térmica", "UNIVERSO", "HIKMICRO", "EA4365087", "001128/2026", "2026-03-11", "2027-03-31", "+ 2/ -2 °C", "SIM", "TIEI0254"], ["RESERVA", "Esfigmomanômetro Infantil", "ESCRÍTORIO", "", "", "", "2025-08-08", "2026-08-31", "", "", ""], ["RESERVA", "Termohigrômetro", "ESCRÍTORIO", "", "", "", "2025-08-08", "2026-08-31", "", "", ""], ["RESERVA", "Oxímetro de Pulso Adulto", "ESCRÍTORIO", "", "", "", "2025-08-08", "2026-08-31", "", "", ""], ["RESERVA", "Termohigrômetro", "ESCRÍTORIO", "", "", "", "2025-08-08", "2026-08-31", "", "", ""], ["RESERVA", "Termohigrômetro", "ESCRÍTORIO", "", "", "", "2025-08-08", "2026-08-31", "", "", ""], ["AB3019", "Câmera Térmica", "OSVALDO CRUZ", "HIKMICRO", "EA4364997", "001842/2026", "2026-05-21", "2027-05-31", "+ 2/ -2 °C", "SIM", "TIEI0254"], ["AB3030", "Manômetro Baby", "GUARAPUÃ", "PROTEC", "S/N", "002260/2025", "2025-07-28", "2026-07-31", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["RESERVA", "Termohigrômetro", "ESCRÍTORIO", "", "", "", "2025-08-08", "2026-08-31", "", "", ""], ["AB3019", "Esfigmomanômetro Infantil", "OSVALDO CRUZ", "PREMIUM", "7862690", "001714/2026", "2026-05-11", "2027-05-31", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3019", "Manômetro Esquerdo", "OSVALDO CRUZ", "PROTEC", "S/N", "001977/2026", "2026-06-09", "2027-06-30", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3019", "Manômetro Baby", "OSVALDO CRUZ", "PROTEC", "S/N", "001983/2026", "2026-06-09", "2027-06-30", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["RESERVA", "Termohigrômetro", "ESCRÍTORIO", "", "", "", "2025-08-08", "2026-08-31", "", "", ""], ["AB3019", "Oxímetro de Pulso Adulto", "OSVALDO CRUZ", "MEDICLINI", "241202408817", "000348/2026", "2026-01-20", "2027-01-29", "± 2% SpO2 |± 2 BPM", "SIM", "EIEI0102"], ["AB3031", "Manômetro Esquerdo", "BROTAS", "PROTEC", "S/N", "002268/2025", "2025-07-28", "2026-07-31", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3019", "Termômetro Clínico", "OSVALDO CRUZ", "INCOTERM", "S/N", "001383/2026", "2026-03-25", "2027-03-31", "± 0,2ºC", "SIM", "TIEI0279"], ["RESERVA", "Termohigrômetro", "ESCRÍTORIO", "", "", "", "2025-08-08", "2026-08-31", "", "", ""], ["RESERVA", "Termohigrômetro", "ESCRÍTORIO", "", "", "", "2025-08-08", "2026-08-31", "", "", ""], ["RESERVA", "Manômetro Direito", "ESCRÍTORIO", "", "", "", "2025-08-08", "2026-08-31", "", "", ""], ["RESERVA", "Esfigmomanômetro", "ESCRÍTORIO", "", "", "", "2025-08-08", "2026-08-31", "", "", ""], ["RESERVA", "Valvula de pressao", "ESCRÍTORIO", "", "", "", "2025-09-11", "2026-09-30", "", "", ""], ["AB3020", "Esfigmomanômetro Obeso", "ADAMANTINA", "PREMIUM", "7802372", "001360/2026", "2026-03-25", "2027-03-31", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3020", "Esfigmomanômetro Infantil", "ADAMANTINA", "PREMIUM", "5400646", "001953/2026", "2026-06-09", "2027-06-30", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3031", "Manômetro Baby", "BROTAS", "PROTEC", "S/N", "002266/2025", "2025-07-28", "2026-07-31", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3020", "Manômetro Direito", "ADAMANTINA", "PROTEC", "S/N", "001601/2026", "2026-04-28", "2027-04-30", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3020", "Manômetro Esquerdo", "ADAMANTINA", "PROTEC", "S/N", "001982/2026", "2026-06-09", "2027-06-30", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3020", "Manômetro Baby", "ADAMANTINA", "PROTEC", "S/N", "001984/2026", "2026-06-09", "2027-06-30", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3020", "Oxímetro de Pulso Adulto", "ADAMANTINA", "MEDICLINI", "241202408897", "000325/2026", "2026-01-20", "2027-01-29", "± 2% SpO2 |± 2 BPM", "SIM", "EIEI0102"], ["AB3031", "Termômetro Clínico", "BROTAS", "SOLIDOR", "S/N", "002252/2025", "2025-07-28", "2026-07-31", "± 0,2ºC", "SIM", "TIEI0279"], ["AB3020", "Termômetro Clínico", "ADAMANTINA", "G-TECH", "S/N", "001384/2026", "2026-03-25", "2027-03-31", "± 0,2ºC", "SIM", "TIEI0279"], ["AB3020", "Câmera Térmica", "ADAMANTINA", "HIKMICRO", "EA4365044", "001127/2026", "2026-03-11", "2027-03-31", "+ 2/ -2 °C", "SIM", "TIEI0254"], ["RESERVA", "Termohigrômetro", "ESCRÍTORIO", "", "", "", "2025-08-29", "2026-08-31", "", "", ""], ["RESERVA", "Termohigrômetro", "ESCRÍTORIO", "", "", "", "2025-08-29", "2026-08-31", "", "", ""], ["USA3001", "Luva isolante cl0 tp2 esquerda", "RIO CLARO", "ORION", "25012903", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["USA3001", "Luva isolante cl0 tp2 direita", "RIO CLARO", "ORION", "25012934", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["USA3001", "Tapete isolante classe 0 inteiriço", "RIO CLARO", "BFLEX", "S/N", "52367", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3021", "Câmera Térmica", "JUNQUEIRÓPOLIS", "HIKMICRO", "EA4365037", "001836/2026", "2026-05-21", "2027-05-31", "+ 2/ -2 °C", "SIM", "TIEI0254"], ["AB3032", "Esfigmomanômetro Infantil", "ITIRAPINA II", "PREMIUM", "7371610", "002223/2025", "2025-07-28", "2026-07-31", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3032", "Termômetro Clínico", "ITIRAPINA II", "SOLIDOR", "S/N", "002251/2025", "2025-07-28", "2026-07-31", "± 0,2ºC", "SIM", "TIEI0279"], ["AB3021", "Esfigmomanômetro Infantil", "JUNQUEIRÓPOLIS", "SOLIDOR", "G 67477", "001353/2026", "2026-03-25", "2027-03-31", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3021", "Manômetro Esquerdo", "JUNQUEIRÓPOLIS", "PROTEC", "S/N", "001978/2026", "2026-06-09", "2027-06-30", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3021", "Manômetro Baby", "JUNQUEIRÓPOLIS", "PROTEC", "S/N", "001972/2026", "2026-06-09", "2027-06-30", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["USA3001", "Respirador Portátil 2000", "RIO CLARO", "VENT-LOGOS", "0930320", "002761/2025", "2025-09-11", "2026-09-30", "±5 cmH2O / ± 0,2 L (A e R)", "SIM", "PIEI0068"], ["USA3002", "Luva isolante cl0 tp2 esquerda", "JAÚ", "ORION", "25012913", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["AB3021", "Termohigrômetro", "JUNQUEIRÓPOLIS", "INCOTERM", "S/N", "001938/2026", "2026-06-08", "2027-06-30", "±2ºC  - Temp. | ±10%UR – Umidade", "SIM", "TIEI0209"], ["AB3021", "Termômetro Clínico", "JUNQUEIRÓPOLIS", "G-TECH", "S/N", "001380/2026", "2026-03-25", "2027-03-31", "± 0,2ºC", "SIM", "TIEI0279"], ["USA3002", "Luva isolante cl0 tp2 direita", "JAÚ", "ORION", "25012926", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["USA3002", "Tapete isolante classe 0 inteiriço", "JAÚ", "BFLEX", "S/N", "52367", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["USA3002", "Oxímetro de Pulso Adulto", "JAÚ", "Mediclini", "E204246240104991", "002612/2025", "2025-08-29", "2026-08-31", "± 2% SpO2 |± 2 BPM", "SIM", "EIEI0102"], ["USA3002", "Ventilador de Bancada 4000", "JAÚ", "VENT-LOGOS", "", "", "", "", "±5 cmH2O / ± 0,2 L (A e R)", "SIM", "PIEI0068"], ["USA3002", "Respirador Portátil 2000", "JAÚ", "VENT-LOGOS", "094-0320", "002507/2025", "2025-08-13", "2026-08-31", "±5 cmH2O / ± 0,2 L (A e R)", "SIM", "PIEI0068"], ["AB3022", "Esfigmomanômetro Adulto", "SANTA MERCEDES", "PREMIUM", "7809887", "001362/2026", "2026-03-25", "2027-03-31", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3022", "Esfigmomanômetro Obeso", "SANTA MERCEDES", "PREMIUM", "7800772", "001361/2026", "2026-03-25", "2027-03-31", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3022", "Esfigmomanômetro Infantil", "SANTA MERCEDES", "PREMIUM", "5422489", "001956/2026", "2026-06-09", "2027-06-30", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3022", "Manômetro Esquerdo", "SANTA MERCEDES", "PROTEC", "S/N", "000551/2026", "2026-02-03", "2027-02-26", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["RESERVA", "Manômetro Esquerdo", "ESCRÍTORIO", "", "", "", "2025-07-28", "2026-07-31", "", "", ""], ["AB3022", "Manômetro Baby", "SANTA MERCEDES", "PROTEC", "S/N", "000541/2026", "2026-02-03", "2027-02-26", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["USA3003", "Luva isolante cl0 tp2 esquerda", "HERCULÂNDIA", "ORION", "25012909", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["RESERVA", "Esfigmomanômetro", "ESCRÍTORIO", "", "", "", "2025-07-30", "2026-07-31", "", "", ""], ["AB3022", "Termômetro Clínico", "SANTA MERCEDES", "G-TECH", "80275310040", "001949/2026", "2026-06-08", "2027-06-30", "± 0,2ºC", "SIM", "TIEI0279"], ["AB3022", "Câmera Térmica", "SANTA MERCEDES", "HIKMICRO", "EA4365031", "001118/2026", "2026-03-11", "2027-03-31", "+ 2/ -2 °C", "SIM", "TIEI0254"], ["USA3003", "Luva isolante cl0 tp2 direita", "HERCULÂNDIA", "ORION", "25012914", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["USA3003", "Tapete isolante classe 0 inteiriço", "HERCULÂNDIA", "BFLEX", "S/N", "52367", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["USA3003", "Valvula de pressao", "HERCULÂNDIA", "PROTEC", "S/N", "002760/2025", "2025-09-11", "2026-09-30", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["USA3003", "Cardioversor", "HERCULÂNDIA", "NIHON KOHDEN", "02156", "002801/2025", "2025-09-29", "2026-09-30", "± 3 J ou 15% | ± 5 BPM ou 10%", "SIM", "EIEI0083"], ["USA3003", "Respirador Portátil 2000", "HERCULÂNDIA", "VENT-LOGOS", "095-0320", "002791/2025", "2025-09-19", "2026-09-30", "±5 cmH2O / ± 0,2 L (A e R)", "SIM", "PIEI0068"], ["AB3023", "Câmera Térmica", "GUACHOS", "HIKMICRO", "EA4365090", "001833/2026", "2026-05-21", "2027-05-31", "+ 2/ -2 °C", "SIM", "TIEI0254"], ["AB3023", "Esfigmomanômetro Adulto", "GUACHOS", "PREMIUM", "7802376", "001363/2026", "2026-03-25", "2027-03-31", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3023", "Esfigmomanômetro Obeso", "GUACHOS", "PREMIUM", "7805881", "001365/2026", "2026-03-25", "2027-03-31", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3023", "Esfigmomanômetro Infantil", "GUACHOS", "PREMIUM", "5972768", "003159/2025", "2025-12-11", "2026-12-31", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3023", "Manômetro Baby", "GUACHOS", "PROTEC", "S/N", "000538/2026", "2026-02-03", "2027-02-26", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["USA3004", "Luva isolante cl0 tp2 esquerda", "REGENTE FEIJÓ", "ORION", "25012925", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["USA3004", "Luva isolante cl0 tp2 direita", "REGENTE FEIJÓ", "ORION", "25012912", "52365", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["RESERVA", "Termohigrômetro", "ESCRÍTORIO", "", "", "", "2025-07-28", "2026-07-31", "", "", ""], ["AB3023", "Termohigrômetro", "GUACHOS", "INCOTERM", "S/N", "003144/2025", "2025-12-11", "2026-12-31", "±2ºC  - Temp. | ±10%UR – Umidade", "SIM", "TIEI0209"], ["USA3004", "Tapete isolante classe 0 inteiriço", "REGENTE FEIJÓ", "BFLEX", "S/N", "52367", "2026-03-19", "2026-09-30", "Classe 0 → ensaio 5 kV", "SIM", "EEAT"], ["USA3004", "Ventilador de Bancada 4000", "REGENTE FEIJÓ", "VENT-LOGOS", "074-0320", "002506/2025", "2025-08-13", "2026-08-31", "±5 cmH2O / ± 0,2 L (A e R)", "SIM", "PIEI0068"], ["AB3025", "Câmera Térmica", "RANCHARIA", "HIKMICRO", "EA4365063", "001832/2026", "2026-05-21", "2027-05-31", "+ 2/ -2 °C", "SIM", "TIEI0254"], ["RESERVA", "Termohigrômetro", "ESCRÍTORIO", "", "", "", "2025-07-28", "2026-07-31", "", "", ""], ["AB3025", "Esfigmomanômetro Obeso", "RANCHARIA", "PREMIUM", "5857764", "001963/2026", "2026-06-09", "2027-06-30", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3025", "Esfigmomanômetro Infantil", "RANCHARIA", "BIC", "773988", "001968/2026", "2026-06-09", "2027-06-30", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3025", "Manômetro Direito", "RANCHARIA", "PROTEC", "S/N", "001985/2026", "2026-06-09", "2027-06-30", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3025", "Manômetro Esquerdo", "RANCHARIA", "PROTEC", "S/N", "001373/2026", "2026-03-25", "2027-03-31", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3025", "Manômetro Baby", "RANCHARIA", "PROTEC", "S/N", "001593/2026", "2026-04-28", "2027-04-30", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3025", "Oxímetro de Pulso Adulto", "RANCHARIA", "MEDICLINI", "241202408819", "000335/2026", "2026-01-20", "2027-01-29", "± 2% SpO2 |± 2 BPM", "SIM", "EIEI0102"], ["RESERVA", "Termohigrômetro", "ESCRÍTORIO", "", "", "", "2025-07-28", "2026-07-31", "", "", ""], ["AB3025", "Termômetro Clínico", "RANCHARIA", "G-TECH", "S/N", "001381/2026", "2026-03-25", "2027-03-31", "± 0,2ºC", "SIM", "TIEI0279"], ["AB3026", "Esfigmomanômetro Obeso", "QUATÁ", "SOLIDOR", "G61916", "003150/2025", "2025-12-11", "2026-12-31", "± 4 mmHg", "SIM", "PIEI0068"], ["AB3026", "Esfigmomanômetro Infantil", "QUATÁ", "PREMIUM", "7805877", "003158/2025", "2025-12-11", "2026-12-31", "± 4 mmHg", "SIM", "PIEI0068"], ["RESERVA", "Termohigrômetro", "ESCRÍTORIO", "", "", "", "2025-07-28", "2026-07-31", "", "", ""], ["RESERVA", "Termômetro Clínico", "ESCRÍTORIO", "", "", "", "2025-07-28", "2026-07-31", "", "", ""], ["AB3026", "Manômetro Esquerdo", "QUATÁ", "PROTEC", "S/N", "000545/2026", "2026-02-03", "2027-02-26", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3026", "Manômetro Baby", "QUATÁ", "PROTEC", "S/N", "001367/2026", "2026-03-25", "2027-03-31", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3026", "Oxímetro de Pulso Adulto", "QUATÁ", "MEDICLINI", "241202408915", "000332/2026", "2026-01-20", "2027-01-29", "± 2% SpO2 |± 2 BPM", "SIM", "EIEI0102"], ["AB3026", "Termohigrômetro", "QUATÁ", "INCOTERM", "S/N", "001942/2026", "2026-06-08", "2027-06-30", "±2ºC  - Temp. | ±10%UR – Umidade", "SIM", "TIEI0209"], ["AB3026", "Termômetro Clínico", "QUATÁ", "G-TECH", "S/N", "001586/2026", "2026-04-28", "2027-04-30", "± 0,2ºC", "SIM", "TIEI0279"], ["AB3026", "Câmera Térmica", "QUATÁ", "HIKMICRO", "EA4365030", "001117/2026", "2026-03-11", "2027-03-31", "+ 2/ -2 °C", "SIM", "TIEI0254"], ["AB3027", "Câmera Térmica", "ASSIS", "HIKMICRO", "EA4365016", "001834/2026", "2026-05-21", "2027-05-31", "+ 2/ -2 °C", "SIM", "TIEI0254"], ["RESERVA", "Termômetro Clínico", "ESCRÍTORIO", "", "", "", "2025-07-28", "2026-07-31", "", "", ""], ["RESERVA", "Termômetro Clínico", "ESCRÍTORIO", "", "", "", "2025-07-28", "2026-07-31", "", "", ""], ["RESERVA", "Termômetro Clínico", "ESCRÍTORIO", "", "", "", "2025-07-28", "2026-07-31", "", "", ""], ["AB3027", "Manômetro Esquerdo", "ASSIS", "PROTEC", "S/N", "000543/2026", "2026-02-03", "2027-02-26", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3027", "Manômetro Baby", "ASSIS", "PROTEC", "S/N", "000544/2026", "2026-02-03", "2027-02-26", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["RESERVA", "Termômetro Clínico", "ESCRÍTORIO", "", "", "", "2025-07-28", "2026-07-31", "", "", ""], ["RESERVA", "Termômetro Clínico", "ESCRÍTORIO", "", "", "", "2025-07-28", "2026-07-31", "", "", ""], ["AB3027", "Termômetro Clínico", "ASSIS", "G-TECH", "S/N", "001376/2026", "2026-03-25", "2027-03-31", "± 0,2ºC", "SIM", "TIEI0279"], ["AB3042R", "Manômetro Direito", "BASEADA EM DUARTINA", "PROTEC", "S/N", "003163/2025", "2025-12-11", "2026-12-31", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["AB3042R", "Manômetro Esquerdo", "BASEADA EM DUARTINA", "PROTEC", "S/N", "001371/2026", "2026-03-25", "2027-03-31", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["RESERVA", "Termômetro Clínico", "ESCRÍTORIO", "", "", "", "2025-07-28", "2026-07-31", "", "", ""], ["RESERVA", "Termômetro Clínico", "ESCRÍTORIO", "", "", "", "2025-07-28", "2026-07-31", "", "", ""], ["RESERVA", "Termômetro Clínico", "ESCRÍTORIO", "", "", "", "2025-07-28", "2026-07-31", "", "", ""], ["RESERVA", "Termômetro Clínico", "ESCRÍTORIO", "", "", "", "2025-07-28", "2026-07-31", "", "", ""], ["RESERVA", "Termômetro Clínico", "ESCRÍTORIO", "", "", "", "2025-07-28", "2026-07-31", "", "", ""], ["USA3001", "Oxímetro de Pulso Adulto", "RIO CLARO", "G-TECH", "223547642479", "002078/2025", "2025-07-03", "2026-07-31", "± 2% SpO2 |± 2 BPM", "SIM", "EIEI0102"], ["USA3001", "Termômetro Clínico", "RIO CLARO", "G-TECH", "S/N", "002246/2025", "2025-07-28", "2026-07-31", "± 0,2ºC", "SIM", "TIEI0279"], ["USA3001", "Ventilador de Bancada 4000", "RIO CLARO", "VENT-LOGOS", "073-0320", "002185/2025", "2025-07-23", "2026-07-31", "±5 cmH2O / ± 0,2 L (A e R)", "SIM", "PIEI0068"], ["USA3002", "Esfigmomanômetro Infantil", "JAÚ", "SOLIDOR", "H 09729", "002101/2025", "2025-07-07", "2026-07-31", "± 4 mmHg", "SIM", "PIEI0068"], ["USA3002", "Termohigrômetro", "JAÚ", "INCOTERM", "S/N", "002080/2025", "2025-07-03", "2026-07-31", "±2ºC  - Temp. | ±10%UR – Umidade", "SIM", "TIEI0046"], ["USA3002", "Termômetro Clínico", "JAÚ", "G-TECH", "S/N", "002248/2025", "2025-07-28", "2026-07-31", "± 0,2ºC", "SIM", "TIEI0279"], ["USA3003", "Termohigrômetro", "HERCULÂNDIA", "INCOTERM", "S/N", "002083/2025", "2025-07-03", "2026-07-31", "±2ºC  - Temp. | ±10%UR – Umidade", "SIM", "TIEI0046"], ["USA3003", "Termômetro Clínico", "HERCULÂNDIA", "SOLIDOR", "S/N", "002250/2025", "2025-07-28", "2026-07-31", "± 0,2ºC", "SIM", "TIEI0279"], ["USA3003", "Ventilador de Bancada 4000", "HERCULÂNDIA", "VENT-LOGOS", "075-0320", "002186/2025", "2025-07-23", "2026-07-31", "±5 cmH2O / ± 0,2 L (A e R)", "SIM", "PIEI0068"], ["USA3004", "Esfigmomanômetro Infantil", "REGENTE FEIJÓ", "P.A. MED", "439742", "002328/2025", "2025-07-30", "2026-07-31", "± 4 mmHg", "SIM", "PIEI0068"], ["USA3004", "Valvula de pressao", "REGENTE FEIJÓ", "PROTEC", "S/N", "002242/2025", "2025-07-28", "2026-07-31", "± 0,5 kgf/cm² (A e R) | ± 10 kgf cm² (A e R)", "SIM", "PIEI0016"], ["USA3004", "Cardioversor", "REGENTE FEIJÓ", "NIHON KOHDEN", "02156", "002157/2025", "2025-07-11", "2026-07-31", "± 3 J ou 15% | ± 5 BPM ou 10%", "SIM", "EIEI0069"], ["USA3004", "Respirador Portátil 2000", "REGENTE FEIJÓ", "VENT-LOGOS", "096-0320", "002079/2025", "2025-07-03", "2026-07-31", "±5 cmH2O / ± 0,2 L (A e R)", "SIM", "PIEI0068"], ["RESERVA", "Cardioversor", "ESCRÍTORIO", "NIHON KOHDEN", "02154", "003138/2025", "2025-12-12", "2026-12-31", "", "", ""]];
+// [prefixo, aparelho, base, fabricante, nSerie, codigo/CA, dataCal, venc, erroMaximo, aprovado, codigoPadrao]
+
+function getRegistrosEixo(prefixo){
+  return EIXO_REAL.filter(r=>r[0]===prefixo);
+}
+
+function statusFromVenc(vencIso){
+  if(!vencIso) return 'sem-dado';
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  const v = new Date(vencIso+'T00:00:00');
+  const diffDias = (v - hoje) / 86400000;
+  if(diffDias < 0) return 'danger';
+  if(diffDias <= 30) return 'warn';
+  return 'ok';
+}
+function statusLabel(s){ return {ok:"Em dia",warn:"A vencer",danger:"Vencido","sem-dado":"Sem registro"}[s]; }
+
+/* ===================== ESTADO ===================== */
+let state = { rodoviaKey:null, matricula:null, prefixoAtual:null, equipAtual:null, coordSelecionado:null, rodoviaFiltro:null, categoria:'calibracao' };
+
+function mostrarAviso(texto, tipo){
+  const t = document.getElementById('toastGlobal');
+  const cores = {
+    erro: {bg:'rgba(229,72,77,0.95)', color:'#fff'},
+    sucesso: {bg:'rgba(61,214,140,0.95)', color:'#062'},
+    aviso: {bg:'rgba(255,198,41,0.95)', color:'#20180a'}
+  };
+  const c = cores[tipo] || cores.aviso;
+  t.style.background = c.bg;
+  t.style.color = c.color;
+  t.textContent = texto;
+  t.classList.remove('hidden');
+  clearTimeout(window._toastTimeout);
+  window._toastTimeout = setTimeout(()=>t.classList.add('hidden'), 4000);
+}
+let envios = [];
+
+/* ===================== NAVEGAÇÃO ===================== */
+function go(screen){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden'));
+  document.getElementById('nav-colab').classList.add('hidden');
+  document.getElementById('nav-gestor').classList.add('hidden');
+  document.getElementById('screen-'+screen).classList.remove('hidden');
+
+  if(screen.startsWith('colab-') && screen!=='colab-login'){ document.getElementById('nav-colab').classList.remove('hidden'); }
+  if(screen.startsWith('gestor-') && screen!=='gestor-login'){ document.getElementById('nav-gestor').classList.remove('hidden'); }
+
+  if(screen==='colab-home') renderColabHome();
+  if(screen==='colab-envios') renderEnvios();
+  if(screen==='gestor-login') renderCoordSelect();
+  if(screen==='gestor-dash') renderGestorDash();
+}
+
+/* ===================== COLABORADOR ===================== */
+function trocarRodoviaTeste(key){
+  state.rodoviaKey = key;
+  renderColabHome();
+}
+
+function loginColab(){
+  const digitado = document.getElementById('matricula').value.trim();
+  const msgBox = document.getElementById('loginColabMsg');
+  msgBox.classList.add('hidden');
+
+  if(!digitado){
+    // modo teste: entra sem matrícula pra visualizar a interface
+    state.matricula = '(teste)'; state.rodoviaKey = 'eixo-sp';
+    go('colab-home');
+    return;
+  }
+
+  // aceita com ou sem os zeros à esquerda (ex: "10527" ou "00010527")
+  let rk = MATRICULAS[digitado];
+  let matriculaFinal = digitado;
+  if(!rk){
+    const semZeros = digitado.replace(/^0+/, '');
+    const chaveEncontrada = Object.keys(MATRICULAS).find(k => k.replace(/^0+/, '') === semZeros && semZeros !== '');
+    if(chaveEncontrada){ rk = MATRICULAS[chaveEncontrada]; matriculaFinal = chaveEncontrada; }
+  }
+  if(!rk){
+    msgBox.classList.remove('hidden');
+    msgBox.style.background = 'rgba(229,72,77,0.12)';
+    msgBox.style.color = 'var(--danger)';
+    msgBox.style.border = '1px solid rgba(229,72,77,0.4)';
+    msgBox.innerHTML = `❌ <b>Matrícula errada ou não cadastrada.</b><br>Você digitou: <span class="mono">${digitado}</span><br>Se tem certeza que está certa, fale com seu coordenador.`;
+    return;
+  }
+  msgBox.classList.remove('hidden');
+  msgBox.style.background = 'rgba(61,214,140,0.12)';
+  msgBox.style.color = 'var(--ok)';
+  msgBox.style.border = '1px solid rgba(61,214,140,0.4)';
+  msgBox.innerHTML = `✅ Matrícula encontrada — entrando...`;
+  state.matricula = matriculaFinal; state.rodoviaKey = rk;
+  setTimeout(()=>go('colab-home'), 400);
+}
+
+function renderColabHome(){
+  const r = RODOVIAS[state.rodoviaKey];
+  document.getElementById('colab-rodovia-label').textContent = 'Colaborador · '+r.nome;
+  document.getElementById('colab-rodovia-nome').textContent = r.nome;
+  document.getElementById('colab-matricula-label').textContent = state.matricula;
+  document.getElementById('colab-nome-label').textContent = NOMES[state.matricula] || 'Modo teste';
+
+  const testeBox = document.getElementById('testeRodoviaBox');
+  if(state.matricula === '(teste)'){
+    testeBox.classList.remove('hidden');
+    const sel = document.getElementById('testeRodoviaSelect');
+    sel.innerHTML = RODOVIAS_ATIVAS.map(k=>`<option value="${k}" ${k===state.rodoviaKey?'selected':''}>${RODOVIAS[k].nome}</option>`).join('');
+  } else {
+    testeBox.classList.add('hidden');
+  }
+
+  const grid = document.getElementById('prefix-grid');
+  grid.innerHTML = '';
+  if(r.prefixos.length===0){
+    grid.innerHTML = '<div style="grid-column:1/-1;padding:16px 4px;color:var(--muted);font-size:12.5px;">Ainda não há viaturas cadastradas para esta rodovia. Assim que a lista chegar, elas aparecem aqui.</div>';
+    return;
+  }
+  r.prefixos.forEach(pf=>{
+    const el = document.createElement('div');
+    el.className='prefix-card';
+    el.onclick = ()=>{ state.prefixoAtual = pf; state.categoria = 'calibracao'; go('colab-equip'); };
+    el.innerHTML = `<b>${pf.p}</b><div class="base">${pf.base}</div>
+      <div class="cnt"><span class="badge locked">${pf.tipo}</span></div>`;
+    grid.appendChild(el);
+  });
+}
+
+function trocarCategoria(cat){
+  state.categoria = cat;
+  document.getElementById('tabCategoriaCalibracao').classList.toggle('active', cat==='calibracao');
+  document.getElementById('tabCategoriaEpi').classList.toggle('active', cat==='epi');
+  renderEquipList();
+}
+
+function renderEquipList(){
+  const pf = state.prefixoAtual;
+  document.getElementById('equip-prefix-label').textContent = RODOVIAS[state.rodoviaKey].nome+' · '+pf.p;
+  document.getElementById('tabCategoriaCalibracao').classList.toggle('active', state.categoria==='calibracao');
+  document.getElementById('tabCategoriaEpi').classList.toggle('active', state.categoria==='epi');
+  const list = document.getElementById('equip-list');
+  list.innerHTML='';
+
+  if(state.categoria === 'epi'){
+    // EPI/EPC ainda não tem base de dados própria em nenhuma rodovia — lista provisória de itens
+    const qtd = quantidadeExigida(state.rodoviaKey, pf.tipo);
+    const qtdLabel = qtd ? `${qtd} unidades exigidas` : 'esfera da rodovia a confirmar';
+    EPI_EPC_SET.forEach(eq=>{
+      const row = document.createElement('div');
+      row.className='equip-row';
+      row.onclick = ()=>{ state.equipAtual = eq; go('colab-capture'); };
+      row.innerHTML = `<div><div class="name">${eq}</div><div class="meta"><span class="badge sem-dado">Sem registro ainda</span> <span class="badge locked">${qtdLabel}</span></div></div><div class="chev">›</div>`;
+      list.appendChild(row);
+    });
+    return;
+  }
+
+  if(state.rodoviaKey === 'eixo-sp'){
+    const registros = getRegistrosEixo(pf.p);
+    if(registros.length===0){
+      list.innerHTML = '<div style="padding:16px 4px;color:var(--muted);font-size:12.5px;">Nenhum equipamento cadastrado para este prefixo na planilha.</div>';
+      return;
+    }
+    registros.forEach(r=>{
+      const [ , equip, cert, , venc ] = r;
+      const s = statusFromVenc(venc);
+      const row = document.createElement('div');
+      row.className='equip-row';
+      row.onclick = ()=>{ state.equipAtual = equip; go('colab-capture'); };
+      row.innerHTML = `<div><div class="name">${equip}</div><div class="meta">${venc?('Vence '+new Date(venc+'T00:00:00').toLocaleDateString('pt-BR')):''} <span class="badge ${s}">${statusLabel(s)}</span></div></div><div class="chev">›</div>`;
+      list.appendChild(row);
+    });
+  } else {
+    // Transbrasiliana / Via Rondon: ainda sem planilha de ativos — só a lista de tipos de equipamento
+    EQUIP_SETS[pf.tipo].forEach(eq=>{
+      const row = document.createElement('div');
+      row.className='equip-row';
+      row.onclick = ()=>{ state.equipAtual = eq; go('colab-capture'); };
+      row.innerHTML = `<div><div class="name">${eq}</div><div class="meta"><span class="badge sem-dado">Sem registro ainda</span></div></div><div class="chev">›</div>`;
+      list.appendChild(row);
+    });
+  }
+}
+document.addEventListener('DOMContentLoaded', ()=>{});
+const _origGo = go;
+
+function renderCapture(){
+  document.getElementById('capture-prefix-label').textContent = RODOVIAS[state.rodoviaKey].nome+' · '+state.prefixoAtual.p;
+  document.getElementById('capture-equip-label').textContent = state.equipAtual;
+  document.getElementById('capture-equip-example').textContent = state.equipAtual;
+  document.getElementById('photoBox').innerHTML = `<span style="font-size:26px;">📷</span><span id="photoBoxHint">Toque para fotografar a etiqueta</span>`;
+  document.getElementById('ocrStrip').classList.add('hidden');
+  document.getElementById('confirmBox').classList.add('hidden');
+  document.getElementById('manualFields').classList.remove('hidden');
+
+  const ensaio = isEnsaio(state.equipAtual);
+  const epi = state.categoria === 'epi';
+  const prefixo = CODIGO_PREFIXO[state.equipAtual];
+
+  document.getElementById('capture-etiqueta-tipo').textContent = ensaio
+    ? 'etiqueta de ENSAIO DIELÉTRICO colada neste equipamento'
+    : epi
+      ? 'etiqueta/identificação deste item de EPI/EPC'
+      : 'etiqueta de calibração colada neste equipamento';
+  document.getElementById('confirmCertLabel').textContent = ensaio ? 'Nº do CA' : (epi ? 'Nº do CA / lote' : 'Código');
+  document.getElementById('confirmDataLabel').textContent = ensaio ? 'Data do ensaio' : (epi ? 'Data de fabricação/inspeção' : 'Data da calibração');
+  document.getElementById('fDataLabel').textContent = ensaio ? 'Data do ensaio' : (epi ? 'Data de fabricação/inspeção' : 'Data da calibração');
+  document.getElementById('fVencLabel').textContent = ensaio ? 'Validade do ensaio (calculada automaticamente)' : (epi ? 'Validade (calculada automaticamente)' : 'Vencimento (calculado automaticamente)');
+
+  const normaInfo = document.getElementById('normaInfo');
+  if(ensaio){
+    normaInfo.classList.remove('hidden');
+    document.getElementById('normaTexto').textContent = NORMA_ENSAIO[state.equipAtual];
+    document.getElementById('fCertLabel').textContent = 'Nº do CA (Certificado de Aprovação)';
+    document.getElementById('fCert').placeholder = 'Ex: 52365';
+    document.getElementById('fCert').value = '';
+  } else if(epi){
+    normaInfo.classList.add('hidden');
+    document.getElementById('fCertLabel').textContent = 'Nº do CA / lote (se tiver)';
+    document.getElementById('fCert').placeholder = 'Ex: 12345';
+    document.getElementById('fCert').value = '';
+  } else {
+    normaInfo.classList.add('hidden');
+    document.getElementById('fCertLabel').textContent = prefixo ? `Código (começa com ${prefixo})` : 'Código';
+    document.getElementById('fCert').placeholder = prefixo ? `Ex: ${prefixo}2050` : 'Ex: DIVAT250CAC';
+    document.getElementById('fCert').value = prefixo || '';
+  }
+
+  document.getElementById('fData').value='';
+  document.getElementById('fVenc').value='';
+  document.getElementById('fVenc').readOnly=true;
+  document.getElementById('fVenc').style.color='var(--muted)';
+  document.getElementById('fVenc').placeholder='';
+  document.getElementById('fCert').readOnly=false;
+  document.getElementById('fData').readOnly=false;
+}
+
+function handlePhoto(ev){
+  const file = ev.target.files[0];
+  if(!file) return;
+  const url = URL.createObjectURL(file);
+  document.getElementById('photoBox').innerHTML = `<img src="${url}">`;
+  const strip = document.getElementById('ocrStrip');
+  strip.classList.remove('hidden');
+  document.getElementById('ocrStatus').textContent = 'Lendo etiqueta…';
+
+  if(window.Tesseract){
+    Tesseract.recognize(file, 'por')
+      .then(({data:{text}})=>{
+        const found = parseOcrText(text);
+        if(found.cert || found.data){
+          document.getElementById('ocrStatus').textContent = 'Leitura concluída';
+          abrirConfirmacao(found);
+        } else {
+          document.getElementById('ocrStatus').textContent = 'Não consegui identificar os dados na etiqueta — preencha manualmente.';
+          document.getElementById('manualFields').classList.remove('hidden');
+        }
+      })
+      .catch(()=>{
+        document.getElementById('ocrStatus').textContent = 'Não consegui ler automaticamente — preencha manualmente.';
+        document.getElementById('manualFields').classList.remove('hidden');
+      });
+  } else {
+    setTimeout(()=>{
+      document.getElementById('ocrStatus').textContent = 'OCR indisponível offline — preencha manualmente.';
+      document.getElementById('manualFields').classList.remove('hidden');
+    }, 600);
+  }
+}
+
+function parseOcrText(text){
+  const found = {};
+  const ensaio = isEnsaio(state.equipAtual);
+  const prefixo = CODIGO_PREFIXO[state.equipAtual];
+
+  if(ensaio){
+    // luva/tapete: procura o número do CA (geralmente perto de "CA" ou "Código" na etiqueta)
+    const m = text.match(/(?:C\.?A\.?|C[oó]digo)\D{0,6}(\d{4,6})/i) || text.match(/\b\d{5}\b/);
+    if(m) found.cert = m[1] || m[0];
+  } else if(prefixo){
+    // procura o prefixo fixo do equipamento seguido de dígitos (ex: TIXR2050)
+    const re = new RegExp(prefixo + '\\s*\\d{3,5}', 'i');
+    const m = text.match(re);
+    if(m) found.cert = m[0].replace(/\s+/g,'').toUpperCase();
+  } else {
+    // sem prefixo conhecido — pega um código alfanumérico genérico
+    const m = text.match(/\b[A-Z]{2,10}\d{2,6}[A-Z0-9]*\b/i);
+    if(m) found.cert = m[0].toUpperCase();
+  }
+  // data: aceita ano com 2 ou 4 dígitos (ex: 04/08/26 ou 04/08/2026)
+  const dateMatch = text.match(/\b(\d{2})[\/\.\-](\d{2})[\/\.\-](\d{2,4})\b/);
+  if(dateMatch){
+    let [, d, mo, y] = dateMatch;
+    if(y.length===2) y = '20'+y;
+    found.data = `${y}-${mo}-${d}`;
+  }
+  return found;
+}
+
+function abrirConfirmacao(found){
+  // guarda o que o OCR leu, sem confirmar ainda — o colaborador decide
+  document.getElementById('confirmCert').textContent = found.cert || '— não identificado —';
+  document.getElementById('confirmData').textContent = found.data ? new Date(found.data+'T00:00:00').toLocaleDateString('pt-BR') : '— não identificada —';
+  document.getElementById('fCert').value = found.cert || '';
+  document.getElementById('fData').value = found.data || '';
+  if(found.data) calcVencimento();
+  document.getElementById('manualFields').classList.add('hidden');
+  document.getElementById('confirmBox').classList.remove('hidden');
+}
+
+function ocrConfirmar(){
+  document.getElementById('confirmBox').classList.add('hidden');
+  document.getElementById('manualFields').classList.remove('hidden');
+  document.getElementById('fCert').readOnly = true;
+  document.getElementById('fData').readOnly = true;
+}
+
+function ocrNaoConfere(){
+  document.getElementById('confirmBox').classList.add('hidden');
+  document.getElementById('manualFields').classList.remove('hidden');
+  document.getElementById('fCert').readOnly = false;
+  document.getElementById('fData').readOnly = false;
+  document.getElementById('fCert').focus();
+}
+
+document.addEventListener('change', (e)=>{ if(e.target.id==='fData') calcVencimento(); });
+
+function calcVencimento(){
+  const d = document.getElementById('fData').value;
+  if(!d) return;
+
+  if(state.categoria === 'epi'){
+    const mesesEpi = VALIDADE_EPI_MESES[state.equipAtual];
+    if(!mesesEpi){
+      // sem validade parametrizada pra esse item — não calcula, exige digitação explícita
+      document.getElementById('fVenc').readOnly = false;
+      document.getElementById('fVenc').style.color = 'var(--ink)';
+      document.getElementById('fVenc').placeholder = 'Digite a validade impressa no equipamento';
+      document.getElementById('fVenc').value = '';
+      return;
+    }
+    const dt = new Date(d+'T00:00:00');
+    dt.setMonth(dt.getMonth()+mesesEpi);
+    document.getElementById('fVenc').readOnly = true;
+    document.getElementById('fVenc').style.color = 'var(--muted)';
+    document.getElementById('fVenc').value = dt.toLocaleDateString('pt-BR');
+    return;
+  }
+
+  const meses = (state.equipAtual && state.equipAtual.startsWith('Tapete isolante')) || (state.equipAtual && state.equipAtual.startsWith('Luva isolante')) ? 6 : 12;
+  const dt = new Date(d+'T00:00:00');
+  dt.setMonth(dt.getMonth()+meses);
+  // último dia útil do mês
+  let last = new Date(dt.getFullYear(), dt.getMonth()+1, 0);
+  while(last.getDay()===0 || last.getDay()===6){ last.setDate(last.getDate()-1); }
+  document.getElementById('fVenc').readOnly = true;
+  document.getElementById('fVenc').style.color = 'var(--muted)';
+  document.getElementById('fVenc').value = last.toLocaleDateString('pt-BR');
+}
+
+function submitCapture(){
+  if(!document.getElementById('fCert').value || !document.getElementById('fData').value){
+    mostrarAviso('Preencha o código e a data.', 'erro'); return;
+  }
+  if(state.categoria === 'epi' && !VALIDADE_EPI_MESES[state.equipAtual] && !document.getElementById('fVenc').value){
+    mostrarAviso('Esse item ainda não tem validade padrão cadastrada — digite a validade impressa no equipamento.', 'erro'); return;
+  }
+  envios.push({
+    rodovia: RODOVIAS[state.rodoviaKey].nome,
+    prefixo: state.prefixoAtual.p,
+    equip: state.equipAtual,
+    categoria: state.categoria,
+    cert: document.getElementById('fCert').value,
+    data: document.getElementById('fData').value,
+    venc: document.getElementById('fVenc').value,
+    matricula: state.matricula,
+    colaborador: NOMES[state.matricula] || state.matricula,
+    status: 'pendente'
+  });
+  mostrarAviso('✅ Enviado para aprovação do coordenador da '+RODOVIAS[state.rodoviaKey].nome+'.', 'sucesso');
+  go('colab-equip');
+}
+
+function renderEnvios(){
+  const box = document.getElementById('envios-list');
+  const meus = envios.filter(e => e.matricula === state.matricula);
+  if(meus.length===0){ box.innerHTML = '<div class="card" style="color:var(--muted);text-align:center;">Nenhum envio ainda. Os registros que você enviar aparecem aqui com o status de aprovação.</div>'; return; }
+  box.innerHTML = meus.map(e=>`
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div><b>${e.equip}</b><div class="meta" style="color:var(--muted);font-size:12px;">${e.rodovia} · ${e.prefixo}</div></div>
+        <span class="badge pend">Pendente</span>
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-top:8px;">Código ${e.cert} · vence ${e.venc}</div>
+    </div>`).join('');
+}
+
+/* patch equip screen render on go() */
+const goOrig = go;
+go = function(screen){
+  goOrig(screen);
+  if(screen==='colab-equip') renderEquipList();
+  if(screen==='colab-capture') renderCapture();
+};
+
+/* ===================== GESTOR ===================== */
+function renderCoordSelect(){
+  const box = document.getElementById('coord-select');
+  box.innerHTML = '<p class="eyebrow" style="margin-bottom:8px;">Usuários cadastrados</p>';
+  COORDENADORES.forEach(c=>{
+    const el = document.createElement('div');
+    el.className='coord-opt';
+    el.style.cursor = 'default';
+    const label = c.acessoTotal ? 'Todas as rodovias' : c.rodovias.map(k=>RODOVIAS[k].nome).join(', ');
+    el.innerHTML = `<span>${c.nome} <span class="mono" style="color:var(--yellow);">(${c.usuario})</span></span><span style="color:var(--muted);font-size:11px;text-align:right;">${label}</span>`;
+    box.appendChild(el);
+  });
+}
+function loginGestor(){
+  const usuario = document.getElementById('gestorUsuario').value.trim().toLowerCase();
+  const senha = document.getElementById('gestorSenha').value;
+  const msgBox = document.getElementById('loginGestorMsg');
+  msgBox.classList.add('hidden');
+
+  if(!usuario && !senha){
+    // modo teste: entra direto como Falcão (acesso total) pra visualizar a interface
+    state.coordSelecionado = COORDENADORES[0];
+    state.rodoviaFiltro = RODOVIAS_ATIVAS[0];
+    go('gestor-dash');
+    return;
+  }
+
+  const c = COORDENADORES.find(x => x.usuario === usuario);
+  if(!c || c.senha !== senha){
+    msgBox.classList.remove('hidden');
+    msgBox.innerHTML = '❌ <b>Usuário ou senha incorretos.</b>';
+    return;
+  }
+  state.coordSelecionado = c;
+  state.rodoviaFiltro = c.acessoTotal ? RODOVIAS_ATIVAS[0] : c.rodovias[0];
+  go('gestor-dash');
+}
+function trocarRodoviaGestor(key){
+  state.rodoviaFiltro = key;
+  renderGestorDash();
+}
+
+function renderGestorDash(){
+  const c = state.coordSelecionado;
+  const rodoviasVisiveis = c.acessoTotal ? RODOVIAS_ATIVAS : c.rodovias;
+  const sel = document.getElementById('filtroRodoviaGestor');
+  sel.innerHTML = rodoviasVisiveis.map(k=>`<option value="${k}" ${k===state.rodoviaFiltro?'selected':''}>${RODOVIAS[k].nome}</option>`).join('');
+
+  const rk = state.rodoviaFiltro;
+  document.getElementById('gestor-rodovia-label').textContent = 'Gestor · '+c.nome+(c.acessoTotal?' (acesso total)':'');
+  document.getElementById('gestor-nome-label').textContent = RODOVIAS[rk].nome;
+
+  if(rk === 'eixo-sp'){
+    const hoje = new Date(); hoje.setHours(0,0,0,0);
+    const dias = (venc)=> (new Date(venc+'T00:00:00') - hoje)/86400000;
+    const comVenc = EIXO_REAL.filter(r=>r[4]);
+    document.getElementById('kpi-vencidos').textContent = comVenc.filter(r=>dias(r[4])<0).length;
+    document.getElementById('kpi-mes').textContent = comVenc.filter(r=>dias(r[4])>=0 && dias(r[4])<=30).length;
+    document.getElementById('kpi-trimestre').textContent = comVenc.filter(r=>dias(r[4])>=0 && dias(r[4])<=90).length;
+    document.getElementById('kpi-semestre').textContent = comVenc.filter(r=>dias(r[4])>=0 && dias(r[4])<=180).length;
+  } else {
+    ['kpi-vencidos','kpi-mes','kpi-trimestre','kpi-semestre'].forEach(id=>document.getElementById(id).textContent='—');
+  }
+
+  renderAprovacoes();
+  renderFrota();
+  renderAlertas();
+}
+
+function setGestorTab(t){
+  ['aprov','frota','alertas'].forEach(k=>{
+    document.getElementById('tab-'+k).classList.toggle('hidden', k!==t);
+  });
+  document.querySelectorAll('#screen-gestor-dash .tabs button').forEach(b=>b.classList.toggle('active', b.dataset.tab===t));
+}
+
+function renderAprovacoes(){
+  const rk = state.rodoviaFiltro;
+  const box = document.getElementById('tab-aprov');
+  const pendentesReais = envios.filter(e=>e.status==='pendente' && e.rodovia===RODOVIAS[rk].nome);
+  if(pendentesReais.length===0){
+    box.innerHTML = '<div class="card" style="color:var(--muted);text-align:center;">Sem pendências de aprovação no momento.</div>';
+    return;
+  }
+  box.innerHTML = pendentesReais.map(e=>`
+    <div class="card approval-card">
+      <div style="display:flex;justify-content:space-between;"><b>${e.equip}</b><span class="badge pend">Pendente</span></div>
+      <div class="rodovia-tag">${e.prefixo}</div>
+      <div style="font-size:11.5px;color:var(--muted);margin-top:6px;">Enviado por <b style="color:var(--ink);">${e.colaborador}</b> · matrícula ${e.matricula}</div>
+      <div style="height:110px;background:var(--panel-2);border-radius:8px;margin:10px 0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:11.5px;">foto da etiqueta</div>
+      <div style="font-size:12px;color:var(--muted);">Código ${e.cert}</div>
+      <div class="approval-actions">
+        <button class="btn btn-danger" style="margin-top:0;" onclick="this.closest('.card').style.opacity=.3">Rejeitar</button>
+        <button class="btn btn-ok" style="margin-top:0;" onclick="this.closest('.card').style.opacity=.3">Aprovar</button>
+      </div>
+    </div>`).join('');
+}
+
+function renderFrota(){
+  const rk = state.rodoviaFiltro;
+  const r = RODOVIAS[rk];
+  const baseSel = document.getElementById('filtroBase');
+  const prefSel = document.getElementById('filtroPrefixo');
+  baseSel.innerHTML = '<option value="">Todas as bases</option>'+[...new Set(r.prefixos.map(p=>p.base))].map(b=>`<option>${b}</option>`).join('');
+  prefSel.innerHTML = '<option value="">Todos os prefixos</option>'+r.prefixos.map(p=>`<option>${p.p}</option>`).join('');
+
+  const relatorioBox = document.getElementById('relatorio-box');
+  relatorioBox.innerHTML = `
+    <button class="btn btn-ghost" onclick="baixarRelatorio('${rk}')">⬇ Baixar relatório (.xlsx) — ${r.nome}</button>
+    <button class="btn btn-ghost" onclick="baixarRelatorioCompleto()">⬇ Baixar planilha completa (.xlsx) — todas as rodovias</button>`;
+
+  if(rk !== 'eixo-sp'){
+    document.getElementById('frota-table').innerHTML = '';
+    document.getElementById('frota-empty').classList.remove('hidden');
+    document.getElementById('frota-wrap').classList.add('hidden');
+    return;
+  }
+  document.getElementById('frota-empty').classList.add('hidden');
+  document.getElementById('frota-wrap').classList.remove('hidden');
+
+  let rows = '<tr><th>Prefixo</th><th>Equipamento</th><th>Vencimento</th><th>Status</th></tr>';
+  EIXO_REAL.forEach(rec=>{
+    const [prefixo, equip, , , venc] = rec;
+    const s = statusFromVenc(venc);
+    rows += `<tr><td>${prefixo}</td><td>${equip}</td><td>${venc?new Date(venc+'T00:00:00').toLocaleDateString('pt-BR'):'—'}</td><td><span class="badge ${s}">${statusLabel(s)}</span></td></tr>`;
+  });
+  document.getElementById('frota-table').innerHTML = rows;
+}
+
+function renderAlertas(){
+  const rk = state.rodoviaFiltro;
+  const box = document.getElementById('tab-alertas');
+  if(rk !== 'eixo-sp'){
+    box.innerHTML = `<div class="card" style="text-align:center;color:var(--muted);font-size:12.5px;">Sem dados de calibração cadastrados ainda para ${RODOVIAS[rk].nome}.</div>`;
+    return;
+  }
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  const comVenc = EIXO_REAL.filter(r=>r[4]);
+  const vencidos = comVenc.filter(r=>(new Date(r[4]+'T00:00:00')-hoje)/86400000 < 0);
+  const aVencer = comVenc.filter(r=>{ const d=(new Date(r[4]+'T00:00:00')-hoje)/86400000; return d>=0 && d<=15; });
+  const linha = r => `${r[1]} — ${r[0]} · vence ${new Date(r[4]+'T00:00:00').toLocaleDateString('pt-BR')}`;
+  box.innerHTML = `
+    <div class="card"><b style="color:var(--danger);">🔴 Vencidos (${vencidos.length})</b>
+      <div style="font-size:12.5px;color:var(--muted);margin-top:8px;line-height:1.8;">${vencidos.slice(0,8).map(linha).join('<br>')}${vencidos.length>8?'<br>+ '+(vencidos.length-8)+' outros':''}</div>
+    </div>
+    <div class="card"><b style="color:var(--warn);">🟠 A vencer em 15 dias (${aVencer.length})</b>
+      <div style="font-size:12.5px;color:var(--muted);margin-top:8px;line-height:1.8;">${aVencer.slice(0,8).map(linha).join('<br>')}${aVencer.length>8?'<br>+ '+(aVencer.length-8)+' outros':''}</div>
+    </div>`;
+}
+
+/* init */
+go('role');
+
+/* ===================== RELATÓRIO (.xlsx com fórmulas) ===================== */
+function baixarRelatorio(rodoviaKey){
+  const r = RODOVIAS[rodoviaKey];
+  const header = ["Aparelho","Ambulância/Estoque","Base","Fabricante","Nº de Série","N° Certificado / CA","Data da Calibração","Vencimento da Calibração/Inspeção","Status","Erro Máximo Admissível","Aprovado? Sim ou Não","Código do Padrão"];
+  const rows = [header];
+
+  if(rodoviaKey === 'eixo-sp'){
+    EIXO_REAL_COMPLETO.forEach((rec,i)=>{
+      const [prefixo, equip, base, fabricante, nSerie, certOuCA, dataCal, , erroMax, aprovado, codPadrao] = rec;
+      const rowIdx = i+2;
+      const isolante = /^(Tapete isolante|Luva isolante)/.test(equip) ? 6 : 12;
+      const vencFormula = dataCal ? `=IF(G${rowIdx}="","",WORKDAY(EOMONTH(G${rowIdx},${isolante})+1,-1))` : '';
+      const statusFormula = dataCal ? `=IF(H${rowIdx}="","",IF(H${rowIdx}<TODAY(),"Venceu",IF(H${rowIdx}<=TODAY()+30,"Prazo - Menos de 30 dias","Prazo - Mais de 1 mês")))` : '';
+      rows.push([
+        equip, prefixo, base, fabricante, nSerie, certOuCA,
+        dataCal,
+        {f: vencFormula.slice(1)},
+        {f: statusFormula.slice(1)},
+        erroMax, aprovado, codPadrao
+      ]);
+    });
+  } else {
+    r.prefixos.forEach(pf=>{
+      EQUIP_SETS[pf.tipo].forEach(equip=>{
+        rows.push([equip, pf.p, pf.base, "", "", "", "", "", "Aguardando cadastro", "", "", ""]);
+      });
+    });
+  }
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [{wch:30},{wch:14},{wch:16},{wch:14},{wch:16},{wch:16},{wch:14},{wch:18},{wch:20},{wch:28},{wch:12},{wch:16}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Calibração");
+  XLSX.writeFile(wb, `CALIBRACAO_${r.nome.replace(/\s+/g,'_')}.xlsx`);
+}
+
+function baixarRelatorioCompleto(){
+  const header = ["Aparelho","Ambulância/Estoque","Base","Fabricante","Nº de Série","N° Certificado / CA","Data da Calibração","Vencimento da Calibração/Inspeção","Status","Erro Máximo Admissível","Aprovado? Sim ou Não","Código do Padrão"];
+  const wb = XLSX.utils.book_new();
+  Object.keys(RODOVIAS).forEach(key=>{
+    const r = RODOVIAS[key];
+    const rows = [header];
+    if(key === 'eixo-sp'){
+      EIXO_REAL_COMPLETO.forEach((rec,i)=>{
+        const [prefixo, equip, base, fabricante, nSerie, certOuCA, dataCal, , erroMax, aprovado, codPadrao] = rec;
+        const rowIdx = i+2;
+        const isolante = /^(Tapete isolante|Luva isolante)/.test(equip) ? 6 : 12;
+        const vencFormula = dataCal ? `IF(G${rowIdx}="","",WORKDAY(EOMONTH(G${rowIdx},${isolante})+1,-1))` : '';
+        const statusFormula = dataCal ? `IF(H${rowIdx}="","",IF(H${rowIdx}<TODAY(),"Venceu",IF(H${rowIdx}<=TODAY()+30,"Prazo - Menos de 30 dias","Prazo - Mais de 1 mês")))` : '';
+        rows.push([equip, prefixo, base, fabricante, nSerie, certOuCA, dataCal, {f:vencFormula}, {f:statusFormula}, erroMax, aprovado, codPadrao]);
+      });
+    } else {
+      r.prefixos.forEach(pf=>{
+        EQUIP_SETS[pf.tipo].forEach(equip=>{
+          rows.push([equip, pf.p, pf.base, "", "", "", "", "", "Aguardando cadastro", "", "", ""]);
+        });
+      });
+      if(r.prefixos.length===0) rows.push(["Sem viaturas cadastradas ainda","","","","","","","","","","",""]);
+    }
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [{wch:30},{wch:14},{wch:16},{wch:14},{wch:16},{wch:16},{wch:14},{wch:18},{wch:20},{wch:28},{wch:12},{wch:16}];
+    // nome de aba: máx 31 caracteres, sem caracteres especiais
+    const abaNome = r.nome.replace(/[\\/*?:[\]]/g,'').slice(0,31);
+    XLSX.utils.book_append_sheet(wb, ws, abaNome);
+  });
+  XLSX.writeFile(wb, `CALIBRACAO_TODAS_RODOVIAS.xlsx`);
+}
+</script>
+</body>
+</html>
